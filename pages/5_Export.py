@@ -41,7 +41,7 @@ ead = SimpleEad(
 
 xml = ead.to_xml()
 st.code(xml, language="xml")
-st.download_button("Download EAD XML", file_name=ead.slug() + ".xml", data=xml, disabled=not ead.done())
+st.download_button("Download EAD XML", file_name=ead.slug() + ".xml", data=xml)
 
 col1, col2 = st.columns(2)
 if col1.button("Back"):
