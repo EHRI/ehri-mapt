@@ -1,11 +1,8 @@
-import datetime
 import os
 
 import boto3
 import streamlit as st
 from botocore.exceptions import ClientError
-
-from ead import SimpleEad, EadItem
 
 TITLE = "title"
 DATE_DESC = "datedesc"
@@ -17,12 +14,13 @@ HOLDER = "holder"
 STREET = "street"
 POSTCODE = "postcode"
 
+EXPIRATION = 3600
 
-def value_or_default(key: str, default):
+def value_or_default(key: str, default = ""):
     return st.session_state[key] if key in st.session_state else default
 
 
-def create_presigned_url(s3, object_name, expiration=3600):
+def create_presigned_url(s3, object_name, expiration=EXPIRATION):
     bucket_name = st.secrets.s3_credentials.bucket
     # Generate a presigned URL for the S3 object
     try:
@@ -38,7 +36,7 @@ def create_presigned_url(s3, object_name, expiration=3600):
     return response
 
 
-@st.experimental_memo
+@st.experimental_memo(ttl=EXPIRATION)
 def load_files():
     s3 = boto3.client('s3',
                       region_name=st.secrets.s3_credentials.region,
@@ -65,5 +63,5 @@ def init_page():
 
     st.write("# WP11 Microarchives Test")
 
-    if st.button("Show State"):
-        st.write(st.session_state)
+    # if st.button("Show State"):
+    #     st.write(st.session_state)

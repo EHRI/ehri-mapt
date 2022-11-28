@@ -13,16 +13,22 @@ st.write("Information about items in this collection.")
 
 for i, (key, url) in enumerate(value_or_default("items", [])):
     col1, col2 = st.columns(2)
-    col1.write(f"#### {key}")
     col1.markdown(f"""<a href="{url}" target="_blank" tabindex="-1">
                     <img src="{url}" width="150" height="auto" alt="{key}"  
                         style="border: 1px solid #ccc"/></a>
                         """, unsafe_allow_html=True)
-    key = f"{key}.title"
-    st.session_state[key] = col2.text_input(f"Name {i + 1}",
-                                            value=value_or_default(key, ""),
-                                            placeholder="Title",
-                                            label_visibility="hidden")
+    col1.caption(key)
+    ead_title = f"{key}.title"
+    st.session_state[ead_title] = col2.text_input(f"Name {i + 1}",
+                                                  value=value_or_default(ead_title),
+                                                  placeholder="Title",
+                                                  label_visibility="hidden")
+    ead_scope = f"{key}.scope"
+    st.session_state[ead_scope] = col2.text_area(f"Scope {i + 1}",
+                                                  value=value_or_default(ead_scope),
+                                                  placeholder="Description",
+                                                  label_visibility="hidden",
+                                                  height=30)
     st.markdown("---")
 
 col1, col2 = st.columns(2)

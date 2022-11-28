@@ -9,12 +9,12 @@ from typing import NamedTuple, List, Tuple
 
 class Identity(NamedTuple):
     # Section 1: identification
-    identifier: str = ""
+    title: str = ""
     datedesc: Optional[date] = None
     extent: str = ""
 
     def done(self) -> bool:
-        return self.identifier.strip() != "" and \
+        return self.title.strip() != "" and \
                self.datedesc is not None and \
                self.extent.strip() != ""
 
@@ -56,10 +56,11 @@ class Contact(NamedTuple):
 class EadItem(NamedTuple):
     id: str
     identity: Identity
+    content: Description
     url: str
 
     def __repr__(self):
-        return f"<EadItem '{self.id}' '{self.identity.identifier}'>"
+        return f"<EadItem '{self.id}' '{self.identity.title}'>"
 
 
 class SimpleEad(NamedTuple):
@@ -75,7 +76,7 @@ class SimpleEad(NamedTuple):
                self.contact.done()
 
     def slug(self) -> str:
-        return slugify(self.identity.identifier)
+        return slugify(self.identity.title)
 
     def to_xml(self):
         now = date.today()
@@ -94,7 +95,7 @@ class SimpleEad(NamedTuple):
         eadid.text = self.slug()
         filedesc = ET.SubElement(eadheader, 'filedesc')
         titleproper = ET.SubElement(filedesc, 'titleproper')
-        titleproper.text = self.identity.identifier
+        titleproper.text = self.identity.title
         publicationstmt = ET.SubElement(eadheader, 'publicationstmt')
         if self.contact.lines():
             address = ET.SubElement(publicationstmt, 'address')
@@ -114,7 +115,7 @@ class SimpleEad(NamedTuple):
         unitid = ET.SubElement(did, 'unitid')
         unitid.text = self.slug()
         unittitle = ET.SubElement(did, 'unittitle')
-        unittitle.text = self.identity.identifier
+        unittitle.text = self.identity.title
         if self.identity.extent:
             physdesc = ET.SubElement(did, 'physdesc', {'label': 'Extent'})
             extent = ET.SubElement(physdesc, 'extent')
@@ -141,14 +142,18 @@ class SimpleEad(NamedTuple):
                 did = ET.SubElement(c1, 'did')
                 unitid = ET.SubElement(did, 'unitid')
                 unitid.text = item.id
-                if item.identity.identifier:
+                if item.identity.title:
                     unittitle = ET.SubElement(did, 'unittitle')
-                    unittitle.text = item.identity.identifier
+                    unittitle.text = item.identity.title
+                if item.content.scope:
+                    scopecontent = ET.SubElement(c1, "scopecontent")
+                    scopecontentp = ET.SubElement(scopecontent, "p")
+                    scopecontentp.text = item.content.scope
         _pretty_print(root, pad='    ')
         return ET.tostring(root, encoding="unicode")
 
     def __repr__(self):
-        return f"<SimpleEAD '{self.identity.identifier}' {self.items}>"
+        return f"<SimpleEAD '{self.identity.title}' {self.items}>"
 
 
 def _pretty_print(current, parent=None, index=-1, depth=0, pad='\t'):
