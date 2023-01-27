@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>{{ ead.identity.title }}</title>
+
+    <style>
+        body {
+            display: grid;
+            color: #eee;
+            background-color: #2b4778;
+            font-family: sans-serif;
+
+            grid-template-areas: ". header ." ". main .";
+            grid-template-columns: 20% 1fr 20%;
+            margin: 0;
+            padding: 0 0 5rem;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: serif;
+        }
+
+        a {
+            color: #a7becf;
+        }
+
+        p {
+            margin: 0 0 0.5rem;
+        }
+
+        header {
+            grid-area: header;
+        }
+        main {
+            grid-area: main;
+        }
+
+
+        .items {
+            display: grid;
+            grid-gap: 1rem;
+            grid-template-columns: repeat(auto-fill, 24rem);
+
+            margin: 0;
+            padding: 0;
+        }
+        .item {
+            display: grid;
+            grid-gap: 1rem;
+            grid-template-areas: "image title" "image description";
+            grid-template-rows: min-content 1fr;
+            grid-template-columns: min-content 1fr;
+        }
+        .item-image {
+            grid-area: image;
+        }
+        .item-image img {
+            width: 10rem;
+            height: auto;
+        }
+        .item-title {
+            grid-area: title;
+        }
+        .item-title h3 {
+            margin: 0;
+        }
+        .item-description {
+            grid-area: description;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ ead.identity.title }}</h1>
+    </header>
+
+    <main>
+        <article>
+            <aside class="metadata">
+                <address>
+                    {{ ead.contact.holder }}
+                    <br/>
+                    {{ ead.contact.street }}
+                    <br/>
+                    {{ ead.contact.postcode }}
+                </address>
+            </aside>
+
+            {% if ead.description.biog %}
+            <h2>Biographical History</h2>
+            <p class="biographical-history">
+                {{ ead.description.biog }}
+            </p>
+            {% endif %}
+            {% if ead.description.scope %}
+            <h2>The Collection</h2>
+            <p class="scope-and-content">
+                {{ ead.description.scope }}
+            </p>
+            {% endif %}
+        </article>
+
+        {% if ead.items %}
+            <h2>Items:</h2>
+            <ul class="items">
+                {%  for item in ead.items %}
+                    <li class="item">
+                        <a class="item-image" href="{{ item.url }}" target="_blank">
+                            <img src="{{ item.url }}" alt="{{  item.id }}"/>
+                        </a>
+                        <header class="item-title">
+                            <h3>{{ item.identity.title or item.id }}</h3>
+                        </header>
+                        <div class="item-description">
+                            <p>{{  item.content.scope }}</p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </main>
+</body>
+</html>

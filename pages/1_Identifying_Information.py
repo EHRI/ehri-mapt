@@ -36,4 +36,4 @@ if col1.button("Back"):
     switch_page("Describe a Collection")
 
 if col2.button("Next"):
-    switch_page("Descriptive Information")
+    switch_page("Context Information")

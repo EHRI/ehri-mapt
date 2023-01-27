@@ -3,6 +3,11 @@ from streamlit_extras.switch_page_button import switch_page
 
 from ead import Identity, Contact, Description, SimpleEad, EadItem
 from lib import *
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+env = Environment(
+    loader=FileSystemLoader(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
+    autoescape=select_autoescape()
+)
 
 
 def key(id: str) -> str:
@@ -40,8 +45,19 @@ ead = SimpleEad(
 
 
 xml = ead.to_xml()
-st.code(xml, language="xml")
+with st.expander("Show EAD XML"):
+    st.code(xml, language="xml")
 st.download_button("Download EAD XML", file_name=ead.slug() + ".xml", data=xml)
+
+with st.expander("Show HTML"):
+    html = env.get_template("index.html.j2").render(ead=ead)
+    st.code(html, language="html")
+st.download_button("Download HTML", file_name=ead.slug() + ".html", data=html)
+
+manifest = ead.to_json()
+with st.expander("Show IIIF Manifest"):
+    st.code(manifest, language="json")
+st.download_button("Download IIIF Manifest", file_name=ead.slug() + ".json", data=manifest)
 
 col1, col2 = st.columns(2)
 if col1.button("Back"):

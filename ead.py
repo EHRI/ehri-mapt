@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from typing import Optional, List
 import xml.etree.ElementTree as ET
@@ -77,6 +78,17 @@ class SimpleEad(NamedTuple):
 
     def slug(self) -> str:
         return slugify(self.identity.title)
+
+    def to_json(self):
+        from iiif_prezi3 import Manifest, Canvas, Collection
+
+        manifest_items = []
+        for item in self.items:
+            canvas = Canvas(id=f"https://wp11.ehri-project.eu/iiif/${item.id}", label={"en": [item.identity.title]})
+            manifest_items.append(canvas)
+        manifest = Manifest(id="https://wp11.ehri-project.eu/iiif", label={"en": [self.identity.title]}, items=manifest_items)
+
+        return manifest.json(indent=2)
 
     def to_xml(self):
         now = date.today()
