@@ -4,6 +4,9 @@ import boto3
 import streamlit as st
 from botocore.exceptions import ClientError
 
+IIIF_SERVER = "https://iiif.ehri-project-test.eu/iiif/3/"
+THUMB_DIR = ".thumb"
+
 TITLE = "title"
 DATE_DESC = "datedesc"
 EXTENT = "extent"
@@ -36,6 +39,13 @@ def create_presigned_url(s3, object_name, expiration=EXPIRATION):
     return response
 
 
+def thumb(name: str) -> str:
+    dn = os.path.dirname(name)
+    bn, _ = os.path.splitext(os.path.basename(name))
+    tn = bn + ".jpg"
+    return os.path.join(dn, THUMB_DIR, tn)
+
+
 @st.experimental_memo(ttl=EXPIRATION)
 def load_files():
     s3 = boto3.client('s3',
@@ -50,10 +60,15 @@ def load_files():
     file_meta = [meta for meta in r["Contents"] if not meta["Key"].endswith("/")]
     items = []
     for i, meta in enumerate(file_meta):
-        key = meta["Key"]
-        item_id = os.path.basename(os.path.splitext(key)[0])
+        key: str = meta["Key"]
+        if THUMB_DIR in key:
+            continue
+
+        # strip_prefix = key[len(st.secrets.s3_credentials.prefix + "/"):]
+        item_id = os.path.splitext(key)[0]
         url = create_presigned_url(s3, key)
-        items.append((item_id, url))
+        thumb_url = create_presigned_url(s3, thumb(key))
+        items.append((item_id, url, thumb_url))
     return items
 
 

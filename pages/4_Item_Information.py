@@ -11,10 +11,10 @@ st.write("## Item information")
 
 st.write("Information about items in this collection.")
 
-for i, (key, url) in enumerate(value_or_default("items", [])):
+for i, (key, url, thumb_url) in enumerate(value_or_default("items", [])):
     col1, col2 = st.columns(2)
     col1.markdown(f"""<a href="{url}" target="_blank" tabindex="-1">
-                    <img src="{url}" width="150" height="auto" alt="{key}"  
+                    <img src="{thumb_url}" width="150" height="auto" alt="{key}"  
                         style="border: 1px solid #ccc"/></a>
                         """, unsafe_allow_html=True)
     col1.caption(key)

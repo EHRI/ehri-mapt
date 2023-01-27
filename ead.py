@@ -1,11 +1,13 @@
-import json
+
 from datetime import date
 from typing import Optional, List
 import xml.etree.ElementTree as ET
 
 import langcodes
 from slugify import slugify
-from typing import NamedTuple, List, Tuple
+from typing import NamedTuple, List
+from urllib.parse import quote_plus
+from lib import IIIF_SERVER
 
 
 class Identity(NamedTuple):
@@ -59,6 +61,7 @@ class EadItem(NamedTuple):
     identity: Identity
     content: Description
     url: str
+    thumb_url: str
 
     def __repr__(self):
         return f"<EadItem '{self.id}' '{self.identity.title}'>"
@@ -68,7 +71,7 @@ class SimpleEad(NamedTuple):
     identity: Identity = Identity()
     description: Description = Description()
     contact: Contact = Contact()
-    items: list[EadItem] = []
+    items: List[EadItem] = []
 
 
     def done(self):
@@ -80,13 +83,41 @@ class SimpleEad(NamedTuple):
         return slugify(self.identity.title)
 
     def to_json(self):
-        from iiif_prezi3 import Manifest, Canvas, Collection
+        from iiif_prezi3 import Manifest, Canvas, Annotation, AnnotationPage, ResourceItem
 
         manifest_items = []
         for item in self.items:
-            canvas = Canvas(id=f"https://wp11.ehri-project.eu/iiif/${item.id}", label={"en": [item.identity.title]})
+            baseurl = f"https://iiif.ehri-project-test.eu/iiif/3/"
+            imgref = baseurl + quote_plus(item.id)
+            canvas = Canvas(
+                id=imgref,
+                label={"en": [item.identity.title or item.id]},
+                thumbnail=[dict(id=item.thumb_url, type="Image", format="image/jpeg")],
+                height=1000,
+                width=750,
+                items=[
+                  AnnotationPage(
+                      id=f"{imgref}/page",
+                      items=[
+                          Annotation(
+                              id=f"{imgref}/ann1",
+                              motivation="painting",
+                              target=imgref,
+                              body=ResourceItem(
+                                id=f"{imgref}.tif/full/pct:50/0/default.jpg",
+                                type="Image",
+                                format="image/jpeg"
+                              )
+                          )
+                      ]
+                  )
+                ]
+            )
             manifest_items.append(canvas)
-        manifest = Manifest(id="https://wp11.ehri-project.eu/iiif", label={"en": [self.identity.title]}, items=manifest_items)
+        manifest = Manifest(
+            id=IIIF_SERVER + "manifest.json",
+            label={"en": [self.identity.title]},
+            items=manifest_items)
 
         return manifest.json(indent=2)
 

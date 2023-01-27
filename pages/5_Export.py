@@ -39,8 +39,8 @@ ead = SimpleEad(
     items=[EadItem(
                 ident,
                 Identity(value_or_default(key(ident))),
-                Description(scope=value_or_default(scope(ident))), url) \
-           for ident, url in value_or_default("items", [])]
+                Description(scope=value_or_default(scope(ident))), url, thumb_url) \
+           for ident, url, thumb_url in value_or_default("items", [])]
 )
 
 
