@@ -101,24 +101,15 @@
             {% endif %}
         </article>
 
-        {% if ead.items %}
-            <h2>Items:</h2>
-            <ul class="items">
-                {%  for item in ead.items %}
-                    <li class="item">
-                        <a class="item-image" href="{{ item.url }}" target="_blank">
-                            <img src="{{ item.url }}" alt="{{  item.id }}"/>
-                        </a>
-                        <header class="item-title">
-                            <h3>{{ item.identity.title or item.id }}</h3>
-                        </header>
-                        <div class="item-description">
-                            <p>{{  item.content.scope }}</p>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+        <section id="export">
+            <h2>Download as XML</h2>
+            <a href="{{ name }}.xml" target="_blank">EAD 2002</a>
+        </section>
+
+        <section id="items">
+            <h2>Browse</h2>
+            <iframe id="mirador-embed" src="items.html" width="100%" height="600px" loading="eager"></iframe>
+        </section>
     </main>
 </body>
 </html>

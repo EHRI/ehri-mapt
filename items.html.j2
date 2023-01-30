@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>{{ ead.identity.title }}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <script src="https://unpkg.com/mirador@latest/dist/mirador.min.js"></script>
+</head>
+<body>
+    <div id="items">
+        <div id="mirador"></div>
+    </div>
+    <script>
+      let manifest = document.location.origin + "/{{ name }}.json";
+
+      Mirador.viewer({
+        id: "mirador",
+        manifests: {
+          manifest: {
+            provider: "EHRI"
+          }
+        },
+        windows: [{
+          loadedManifest: manifest,
+          canvasIndex: 0,
+          thumbnailNavigationPosition: 'far-bottom'
+        }]
+      });
+    </script>
+</body>
+</html>

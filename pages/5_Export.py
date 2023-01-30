@@ -44,13 +44,15 @@ ead = SimpleEad(
 )
 
 
+TEMP_NAME = "testing"
+
 xml = ead.to_xml()
 with st.expander("Show EAD XML"):
     st.code(xml, language="xml")
 st.download_button("Download EAD XML", file_name=ead.slug() + ".xml", data=xml)
 
+html = env.get_template("index.html.j2").render(name=TEMP_NAME, ead=ead)
 with st.expander("Show HTML"):
-    html = env.get_template("index.html.j2").render(ead=ead)
     st.code(html, language="html")
 st.download_button("Download HTML", file_name=ead.slug() + ".html", data=html)
 
@@ -59,6 +61,14 @@ with st.expander("Show IIIF Manifest"):
     st.code(manifest, language="json")
 st.download_button("Download IIIF Manifest", file_name=ead.slug() + ".json", data=manifest)
 
+st.markdown("---")
+if st.button("Publish Website"):
+    items_html = env.get_template("items.html.j2").render(name=TEMP_NAME, ead=ead)
+    url = publish(TEMP_NAME, html, items_html, xml, manifest)
+    st.markdown(f"Waiting for site to be available at: [https://{url}](https://{url})")
+
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Item Information")
+
+

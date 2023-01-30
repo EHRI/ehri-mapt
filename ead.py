@@ -12,7 +12,7 @@ from lib import IIIF_SERVER
 
 class Identity(NamedTuple):
     # Section 1: identification
-    title: str = ""
+    title: str = "Default Collection Name"
     datedesc: Optional[date] = None
     extent: str = ""
 
@@ -25,7 +25,7 @@ class Identity(NamedTuple):
 class Description(NamedTuple):
     # Section 2: description
     biog: str = ""
-    scope: str = ""
+    scope: str = "Default collection description..."
     lang: List[str] = []
 
     def done(self) -> bool:
@@ -92,7 +92,7 @@ class SimpleEad(NamedTuple):
             canvas = Canvas(
                 id=imgref,
                 label={"en": [item.identity.title or item.id]},
-                thumbnail=[dict(id=item.thumb_url, type="Image", format="image/jpeg")],
+                thumbnail=[dict(id=f"{imgref}.tif/full/!100,150/0/default.jpg", type="Image", format="image/jpeg")],
                 height=1000,
                 width=750,
                 items=[
