@@ -3,7 +3,7 @@
 import os
 import xml.etree.ElementTree as ET
 from datetime import date
-from typing import NamedTuple, List, Tuple, Dict
+from typing import NamedTuple, List, Tuple, Dict, Union
 from typing import Optional
 from urllib.parse import quote_plus
 
@@ -64,11 +64,12 @@ class EadItem(NamedTuple):
     id: str
     identity: Identity
     content: Description
-    url: str
-    thumb_url: str
+    url: Union[str, None]
+    thumb_url: Union[str, None]
+    items: List['EadItem']
 
     def __repr__(self):
-        return f"<EadItem '{self.id}' '{self.identity.title}'>"
+        return f"<EadItem '{self.id}' '{self.identity.title}' (children: {len(self.items)})>"
 
 
 class SimpleEad(NamedTuple):
@@ -84,6 +85,32 @@ class SimpleEad(NamedTuple):
 
     def slug(self) -> str:
         return slugify(self.identity.title)
+
+    def nest_parents(self, parents: Dict[str, EadItem]) -> Dict[str, EadItem]:
+        def nest(flat: Dict[str, EadItem], nested: Dict[str, EadItem]) -> Dict[str, EadItem]:
+            # break
+            if not flat:
+                return nested
+
+            path, item = flat.popitem()
+            *parts, last = path.split('/')
+            if not parts:
+                nested[path] = item
+            else:
+                p_path = '/'.join(parts)
+                p = flat.get(p_path) if p_path in flat else EadItem(
+                    id=p_path,
+                    identity=Identity(title=parts[-1]),
+                    content=Description(),
+                    url=None,
+                    thumb_url=None,
+                    items=[]
+                )
+                p.items.insert(0, item)
+                flat[p_path] = p
+            return nest(flat, nested)
+        return nest(parents, {})
+
 
     def to_xml(self):
         now = date.today()
@@ -142,20 +169,50 @@ class SimpleEad(NamedTuple):
             scopecontentp = ET.SubElement(scopecontent, 'p')
             scopecontentp.text = self.description.scope
 
+        parents = {}
+        for item in self.items:
+            prefix, *path_parts, _ = item.id.split('/')
+            if len(path_parts) == 0:
+                continue
+
+            dir_path = os.path.join(path_parts[0], *path_parts[1:])
+            print(f"Processing path {dir_path}")
+            p = parents.get(dir_path)
+            if p is None:
+                p = EadItem(
+                    id=os.path.join(prefix, dir_path),
+                    identity=Identity(title=path_parts[-1]),
+                    content=Description(),
+                    url=None,
+                    thumb_url=None,
+                    items=[]
+                )
+            p.items.append(item)
+            parents[dir_path] = p
+
+        print(f"Parents: {parents}")
+
         if self.items:
             dsc = ET.SubElement(archdesc, 'dsc')
-            for item in self.items:
-                c1 = ET.SubElement(dsc, 'c1', {'level': 'item'})
-                did = ET.SubElement(c1, 'did')
-                unitid = ET.SubElement(did, 'unitid')
-                unitid.text = item.id
-                if item.identity.title:
-                    unittitle = ET.SubElement(did, 'unittitle')
-                    unittitle.text = item.identity.title
-                if item.content.scope:
-                    scopecontent = ET.SubElement(c1, "scopecontent")
-                    scopecontentp = ET.SubElement(scopecontent, "p")
-                    scopecontentp.text = item.content.scope
+            for item in self.nest_parents(parents).values():
+
+                def make_child(child: EadItem, parent: ET.Element, num: int):
+                    c = ET.SubElement(parent, f"c{num}", {'level': 'otherlevel'})
+                    did = ET.SubElement(c, 'did')
+                    unitid = ET.SubElement(did, 'unitid')
+                    unitid.text = child.id
+                    if child.identity.title:
+                        unittitle = ET.SubElement(did, 'unittitle')
+                        unittitle.text = child.identity.title
+                    if child.content.scope:
+                        scopecontent = ET.SubElement(c, "scopecontent")
+                        scopecontentp = ET.SubElement(scopecontent, "p")
+                        scopecontentp.text = child.content.scope
+                    for cc in child.items:
+                        make_child(cc, c, num + 1)
+
+                make_child(item, dsc, 1)
+
         _pretty_print(root, pad='    ')
         return ET.tostring(root, encoding="unicode")
 
