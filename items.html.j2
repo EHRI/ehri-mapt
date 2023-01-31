@@ -5,6 +5,11 @@
     <title>{{ ead.identity.title }}</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
     <script src="https://unpkg.com/mirador@latest/dist/mirador.min.js"></script>
+    <style>
+        html, body {
+            height: 100vh;
+        }
+    </style>
 </head>
 <body>
     <div id="items">
@@ -19,6 +24,13 @@
           manifest: {
             provider: "EHRI"
           }
+        },
+        workspace: {
+          isWorkspaceAddVisible: false,
+          allowNewWindows: false,
+        },
+        workspaceControlPanel: {
+          enabled: true
         },
         windows: [{
           loadedManifest: manifest,
