@@ -1,12 +1,16 @@
+"""Ead document proxy"""
 
-from datetime import date
-from typing import Optional, List
+import os
 import xml.etree.ElementTree as ET
+from datetime import date
+from typing import NamedTuple, List, Tuple, Dict
+from typing import Optional
+from urllib.parse import quote_plus
 
 import langcodes
+from iiif_prezi3 import Range
 from slugify import slugify
-from typing import NamedTuple, List
-from urllib.parse import quote_plus
+
 from lib import IIIF_SERVER
 
 
@@ -73,7 +77,6 @@ class SimpleEad(NamedTuple):
     contact: Contact = Contact()
     items: List[EadItem] = []
 
-
     def done(self):
         return self.identity.done() and \
                self.description.done() and \
@@ -81,45 +84,6 @@ class SimpleEad(NamedTuple):
 
     def slug(self) -> str:
         return slugify(self.identity.title)
-
-    def to_json(self):
-        from iiif_prezi3 import Manifest, Canvas, Annotation, AnnotationPage, ResourceItem
-
-        manifest_items = []
-        for item in self.items:
-            baseurl = f"https://iiif.ehri-project-test.eu/iiif/3/"
-            imgref = baseurl + quote_plus(item.id)
-            canvas = Canvas(
-                id=imgref,
-                label={"en": [item.identity.title or item.id]},
-                thumbnail=[dict(id=f"{imgref}.tif/full/!100,150/0/default.jpg", type="Image", format="image/jpeg")],
-                height=1000,
-                width=750,
-                items=[
-                  AnnotationPage(
-                      id=f"{imgref}/page",
-                      items=[
-                          Annotation(
-                              id=f"{imgref}/ann1",
-                              motivation="painting",
-                              target=imgref,
-                              body=ResourceItem(
-                                id=f"{imgref}.tif/full/pct:50/0/default.jpg",
-                                type="Image",
-                                format="image/jpeg"
-                              )
-                          )
-                      ]
-                  )
-                ]
-            )
-            manifest_items.append(canvas)
-        manifest = Manifest(
-            id=IIIF_SERVER + "manifest.json",
-            label={"en": [self.identity.title]},
-            items=manifest_items)
-
-        return manifest.json(indent=2)
 
     def to_xml(self):
         now = date.today()
@@ -195,6 +159,78 @@ class SimpleEad(NamedTuple):
         _pretty_print(root, pad='    ')
         return ET.tostring(root, encoding="unicode")
 
+    def to_json(self):
+        from iiif_prezi3 import Manifest, Canvas, CanvasRef, Annotation, AnnotationPage, ResourceItem, Range
+
+        baseurl = f"https://iiif.ehri-project-test.eu/iiif/3/"
+
+        manifest_items = []
+        for item in self.items:
+            canvas_ref = baseurl + quote_plus(item.id)
+            canvas = Canvas(
+                id=canvas_ref,
+                label={"en": [item.identity.title or item.id]},
+                thumbnail=[dict(id=f"{canvas_ref}.tif/full/!100,150/0/default.jpg", type="Image", format="image/jpeg")],
+                height=1000,
+                width=750,
+                items=[
+                    AnnotationPage(
+                        id=f"{canvas_ref}/page",
+                        items=[
+                            Annotation(
+                                id=f"{canvas_ref}/ann1",
+                                motivation="painting",
+                                target=canvas_ref,
+                                body=ResourceItem(
+                                    id=f"{canvas_ref}.tif/full/pct:50/0/default.jpg",
+                                    type="Image",
+                                    format="image/jpeg"
+                                )
+                            )
+                        ]
+                    )
+                ]
+            )
+            manifest_items.append(canvas)
+
+        manifest_structures = []
+        ranges = {}
+
+        for item in self.items:
+            print(f"Processing structure for {item.id}")
+            canvas_ref: str = baseurl + quote_plus(item.id)
+            path_parts: List[str] = item.id.split('/')[1:-1]
+            if len(path_parts) == 0:
+                continue
+
+            dir_path = os.path.join(path_parts[0], *path_parts[1:])
+            print(f"Processing path {dir_path}")
+
+            cr = CanvasRef(id=canvas_ref, type="Canvas", label={"en": [item.identity.title or item.id]})
+            r = ranges.get(dir_path)
+            if r is None:
+                r = Range(
+                    id=f"{baseurl}range/{dir_path}",
+                    label={"en": [path_parts[-1]]},
+                    items=[]
+                )
+                ranges[dir_path] = r
+            r.items.append(cr)
+
+        # go through the ranges, create any parents without direct item children,
+        # and nest any sub-ranges
+        nested_ranges = nest_ranges(baseurl, ranges)
+        manifest_structures.extend(nested_ranges.values())
+
+        manifest = Manifest(
+            id=IIIF_SERVER + "manifest.json",
+            label={"en": [self.identity.title]},
+            items=manifest_items,
+            structures=manifest_structures)
+
+        return manifest.json(indent=2)
+
+
     def __repr__(self):
         return f"<SimpleEAD '{self.identity.title}' {self.items}>"
 
@@ -209,3 +245,30 @@ def _pretty_print(current, parent=None, index=-1, depth=0, pad='\t'):
             parent[index - 1].tail = '\n' + (pad * depth)
         if index == len(parent) - 1:
             current.tail = '\n' + (pad * (depth - 1))
+
+
+def nest_ranges(baseurl: str, ranges: Dict[str, Range]) -> Dict[str, Range]:
+    def nest(flat: Dict[str, Range], nested: Dict[str, Range]) -> Dict[str, Range]:
+        # break condition:
+        if not flat:
+            return nested
+
+        path, r = flat.popitem()
+        *parts, last = path.split('/')
+        if not parts:
+            nested[path] = r
+        else:
+            # create a range for the last component and
+            # insert it into those to be processed
+            p_path = '/'.join(parts)
+            p = flat.get(p_path) if p_path in flat else Range(
+                id=f"{baseurl}range/{p_path}",
+                label={"en": [parts[-1]]},
+                items=[]
+            )
+            # ranges inserted at the beginning of items
+            p.items.insert(0, r)
+            flat[p_path] = p
+        return nest(flat, nested)
+
+    return nest(ranges, {})

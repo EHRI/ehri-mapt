@@ -1,0 +1,4 @@
+# Notes
+
+* For each directory in the source, allow the user to mark it as either a set of items
+  (e.g. a collection of postcards), or a composite item, e.g. the scanned pages of a diary
