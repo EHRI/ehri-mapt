@@ -96,7 +96,7 @@ def get_random_string(length: int) -> str:
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def publish(name: str, index: str, items: str, xml: str, json: str):
+def publish(name: str, index: str, xml: str, json: str):
     """Publish data to a Cloudfront distribution..."""
 
     bucket = st.secrets.s3_credentials.bucket
@@ -110,7 +110,6 @@ def publish(name: str, index: str, items: str, xml: str, json: str):
 
     files = [
         ("index.html", "text/html", index),
-        ("items.html", "text/html", items),
         (f"{name}.xml", "text/xml", xml),
         (f"{name}.json", "application/json", json),
     ]

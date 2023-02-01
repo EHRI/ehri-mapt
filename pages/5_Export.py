@@ -1,7 +1,10 @@
 
 from streamlit_extras.switch_page_button import switch_page
 
-from ead import Identity, Contact, Description, SimpleEad, EadItem
+from ead import Ead
+from microarchive import Identity, Contact, Description, MicroArchive, Item
+
+from iiif import IIIFManifest
 from lib import *
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 env = Environment(
@@ -24,7 +27,7 @@ init_page()
 
 st.write("## Export Information")
 
-ead = SimpleEad(
+desc = MicroArchive(
     identity=Identity(
         title=value_or_default(TITLE),
         datedesc=value_or_default(DATE_DESC, None),
@@ -36,7 +39,7 @@ ead = SimpleEad(
     description=Description(biog=value_or_default(BIOG_HIST),
                             scope=value_or_default(SCOPE),
                             lang=value_or_default(LANGS, [])),
-    items=[EadItem(
+    items=[Item(
                 ident,
                 Identity(value_or_default(key(ident))),
                 Description(scope=value_or_default(scope(ident))), url, thumb_url, [])
@@ -46,25 +49,24 @@ ead = SimpleEad(
 
 TEMP_NAME = "testing"
 
-xml = ead.to_xml()
+xml = Ead().to_xml(desc)
 with st.expander("Show EAD XML"):
     st.code(xml, language="xml")
-st.download_button("Download EAD XML", file_name=ead.slug() + ".xml", data=xml)
+st.download_button("Download EAD XML", file_name=desc.slug() + ".xml", data=xml)
 
-html = env.get_template("index.html.j2").render(name=TEMP_NAME, ead=ead)
+html = env.get_template("index.html.j2").render(name=TEMP_NAME, data=desc)
 with st.expander("Show HTML"):
     st.code(html, language="html")
-st.download_button("Download HTML", file_name=ead.slug() + ".html", data=html)
+st.download_button("Download HTML", file_name=desc.slug() + ".html", data=html)
 
-manifest = ead.to_json(baseurl=st.secrets.iiif.server_url, prefix=st.secrets.s3_credentials.prefix)
+manifest = IIIFManifest(baseurl=st.secrets.iiif.server_url, prefix=st.secrets.s3_credentials.prefix).to_json(desc)
 with st.expander("Show IIIF Manifest"):
     st.code(manifest, language="json")
-st.download_button("Download IIIF Manifest", file_name=ead.slug() + ".json", data=manifest)
+st.download_button("Download IIIF Manifest", file_name=desc.slug() + ".json", data=manifest)
 
 st.markdown("---")
 if st.button("Publish Website"):
-    items_html = env.get_template("items.html.j2").render(name=TEMP_NAME, ead=ead)
-    url = publish(TEMP_NAME, html, items_html, xml, manifest)
+    url = publish(TEMP_NAME, html, xml, manifest)
     st.markdown(f"Waiting for site to be available at: [https://{url}](https://{url})")
 
 col1, col2 = st.columns(2)

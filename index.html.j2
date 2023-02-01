@@ -2,7 +2,7 @@
 
 <html lang="en">
 <head>
-    <title>{{ ead.identity.title }}</title>
+    <title>{{ data.identity.title }}</title>
 
     <style>
         body {
@@ -11,10 +11,12 @@
             background-color: #ffffff;
             font-family: sans-serif;
 
-            grid-template-areas: ". header ." ". main .";
+            grid-template-areas: ". header ." ". main ." ". items .";
+            grid-template-rows: min-content min-content auto;
             grid-template-columns: 20% 1fr 20%;
             margin: 0;
             padding: 0 0 5rem;
+            height: 100vh;
         }
 
         h1, h2, h3, h4 {
@@ -37,67 +39,46 @@
             grid-area: main;
         }
 
-
-        .items {
-            display: grid;
-            grid-gap: 1rem;
-            grid-template-columns: repeat(auto-fill, 24rem);
-
+        #items {
             margin: 0;
             padding: 0;
+            grid-area: items;
         }
-        .item {
-            display: grid;
-            grid-gap: 1rem;
-            grid-template-areas: "image title" "image description";
-            grid-template-rows: min-content 1fr;
-            grid-template-columns: min-content 1fr;
-        }
-        .item-image {
-            grid-area: image;
-        }
-        .item-image img {
-            width: 10rem;
-            height: auto;
-        }
-        .item-title {
-            grid-area: title;
-        }
-        .item-title h3 {
-            margin: 0;
-        }
-        .item-description {
-            grid-area: description;
+        #mirador {
+            position: relative;
+            height: 100%;
         }
     </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <script src="https://unpkg.com/mirador@latest/dist/mirador.min.js"></script>
 </head>
 <body>
     <header>
-        <h1>{{ ead.identity.title }}</h1>
+        <h1>{{ data.identity.title }}</h1>
     </header>
 
     <main>
         <article>
             <aside class="metadata">
                 <address>
-                    {{ ead.contact.holder }}
+                    {{ data.contact.holder }}
                     <br/>
-                    {{ ead.contact.street }}
+                    {{ data.contact.street }}
                     <br/>
-                    {{ ead.contact.postcode }}
+                    {{ data.contact.postcode }}
                 </address>
             </aside>
 
-            {% if ead.description.biog %}
+            {% if data.description.biog %}
             <h2>Biographical History</h2>
             <p class="biographical-history">
-                {{ ead.description.biog }}
+                {{ data.description.biog }}
             </p>
             {% endif %}
-            {% if ead.description.scope %}
+            {% if data.description.scope %}
             <h2>The Collection</h2>
             <p class="scope-and-content">
-                {{ ead.description.scope }}
+                {{ data.description.scope }}
             </p>
             {% endif %}
         </article>
@@ -107,10 +88,34 @@
             <a href="{{ name }}.xml" target="_blank">EAD 2002</a>
         </section>
 
-        <section id="items">
-            <h2>Browse</h2>
-            <iframe id="mirador-embed" src="items.html" width="100%" height="600px" loading="eager"></iframe>
-        </section>
     </main>
+    <section id="items">
+        <!-- <iframe id="mirador-embed" src="items.html" width="100%" height="600px" loading="eager"></iframe>-->
+        <div id="mirador"></div>
+    </section>
+    <script>
+      let manifest = document.location.origin + "/{{ name }}.json";
+
+      Mirador.viewer({
+        id: "mirador",
+        manifests: {
+          manifest: {
+            provider: "EHRI"
+          }
+        },
+        workspace: {
+          isWorkspaceAddVisible: false,
+          allowNewWindows: false,
+        },
+        workspaceControlPanel: {
+          enabled: true
+        },
+        windows: [{
+          loadedManifest: manifest,
+          canvasIndex: 0,
+          thumbnailNavigationPosition: 'far-bottom',
+        }]
+      });
+    </script>
 </body>
 </html>
