@@ -96,11 +96,10 @@ def get_random_string(length: int) -> str:
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def publish(name: str, index: str, xml: str, json: str):
+def upload(name: str, index: str, xml: str, json: str):
     """Publish data to a Cloudfront distribution..."""
 
     bucket = st.secrets.s3_credentials.bucket
-    region = st.secrets.s3_credentials.region
     file_prefix:str = st.secrets.s3_credentials.prefix
     file_prefix_no_slash = file_prefix[:-1] if file_prefix.endswith("/") else file_prefix
     # the suffix for the uploaded material, on top of the
@@ -124,6 +123,16 @@ def publish(name: str, index: str, xml: str, json: str):
             Body=data.encode('utf-8')
         )
 
+
+def create_site(name: str):
+    bucket = st.secrets.s3_credentials.bucket
+    region = st.secrets.s3_credentials.region
+    file_prefix:str = st.secrets.s3_credentials.prefix
+    file_prefix_no_slash = file_prefix[:-1] if file_prefix.endswith("/") else file_prefix
+    # the suffix for the uploaded material, on top of the
+    # suffix for the input files
+    suffix = "_webdata/"
+    key_prefix = file_prefix_no_slash + suffix
     # Make a cloudfront distribution for the uploaded data
     cloudfront = aws_client('cloudfront')
 

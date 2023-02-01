@@ -49,25 +49,39 @@ desc = MicroArchive(
 
 TEMP_NAME = "testing"
 
-xml = Ead().to_xml(desc)
-with st.expander("Show EAD XML"):
-    st.code(xml, language="xml")
-st.download_button("Download EAD XML", file_name=desc.slug() + ".xml", data=xml)
-
-html = env.get_template("index.html.j2").render(name=TEMP_NAME, data=desc)
-with st.expander("Show HTML"):
-    st.code(html, language="html")
-st.download_button("Download HTML", file_name=desc.slug() + ".html", data=html)
-
-manifest = IIIFManifest(baseurl=st.secrets.iiif.server_url, prefix=st.secrets.s3_credentials.prefix).to_json(desc)
-with st.expander("Show IIIF Manifest"):
-    st.code(manifest, language="json")
-st.download_button("Download IIIF Manifest", file_name=desc.slug() + ".json", data=manifest)
 
 st.markdown("---")
 if st.button("Publish Website"):
-    url = publish(TEMP_NAME, html, xml, manifest)
-    st.markdown(f"Waiting for site to be available at: [https://{url}](https://{url})")
+    site_id = create_site(TEMP_NAME)
+    url = f"https://{site_id}"
+    st.markdown(f"Waiting for site to be available at: [{url}]({url})")
+
+    st.write("Generating EAD...")
+    xml = Ead().to_xml(desc)
+    with st.expander("Show EAD XML"):
+        st.code(xml, language="xml")
+    st.download_button("Download EAD XML", file_name=desc.slug() + ".xml", data=xml)
+
+    st.write("Generating IIIF manifest...")
+    manifest = IIIFManifest(
+        baseurl=url,
+        name=TEMP_NAME,
+        service_url=st.secrets.iiif.server_url,
+        prefix=st.secrets.s3_credentials.prefix).to_json(desc)
+    with st.expander("Show IIIF Manifest"):
+        st.code(manifest, language="json")
+    st.download_button("Download IIIF Manifest", file_name=desc.slug() + ".json", data=manifest)
+
+    st.write("Generating site...")
+    html = env.get_template("index.html.j2").render(name=TEMP_NAME, data=desc)
+    st.download_button("Download HTML", file_name=desc.slug() + ".html", data=html)
+
+    st.write("Uploading data...")
+    upload(TEMP_NAME, html, xml, manifest)
+    st.markdown("### Done!")
+    st.write("Your site should be available in a few minutes.")
+
+
 
 col1, col2 = st.columns(2)
 if col1.button("Back"):

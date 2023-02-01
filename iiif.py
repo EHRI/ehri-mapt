@@ -9,15 +9,17 @@ from microarchive import MicroArchive
 
 
 class IIIFManifest():
-    def __init__(self, baseurl: str, prefix: str):
+    def __init__(self, baseurl: str, name: str, service_url: str, prefix: str):
         self.baseurl = baseurl
+        self.name = name
+        self.service_url = service_url
         self.prefix = prefix
 
     def to_json(self, data: MicroArchive) -> str:
 
         manifest_items = []
         for item in data.items:
-            canvas_ref = self.baseurl + quote_plus(self.prefix + item.id)
+            canvas_ref = self.service_url + quote_plus(self.prefix + item.id)
             canvas = Canvas(
                 id=canvas_ref,
                 label={"en": [item.identity.title or item.id]},
@@ -48,7 +50,7 @@ class IIIFManifest():
         ranges = {}
 
         for item in data.items:
-            canvas_ref: str = self.baseurl + quote_plus(self.prefix + item.id)
+            canvas_ref: str = self.service_url + quote_plus(self.prefix + item.id)
             *path_parts, _ = item.id.split('/')
             if len(path_parts) == 0:
                 continue
@@ -59,7 +61,7 @@ class IIIFManifest():
             r = ranges.get(dir_path)
             if r is None:
                 r = Range(
-                    id=f"{self.baseurl}range/{dir_path}",
+                    id=f"{self.baseurl}/{self.name}/range/{dir_path}",
                     label={"en": [path_parts[-1]]},
                     items=[]
                 )
@@ -72,7 +74,7 @@ class IIIFManifest():
         manifest_structures.extend(nested_ranges.values())
 
         manifest = Manifest(
-            id=self.baseurl + "manifest.json",
+            id=f"{self.baseurl}/{self.name}.json",
             label={"en": [data.identity.title]},
             items=manifest_items,
             structures=manifest_structures)
@@ -94,7 +96,7 @@ class IIIFManifest():
                 # insert it into those to be processed
                 p_path = '/'.join(parts)
                 p = flat.get(p_path) if p_path in flat else Range(
-                    id=f"{self.baseurl}range/{p_path}",
+                    id=f"{self.baseurl}/{self.name}/range/{p_path}",
                     label={"en": [parts[-1]]},
                     items=[]
                 )
