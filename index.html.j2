@@ -112,23 +112,34 @@
 
       Mirador.viewer({
         id: "viewer",
-        manifests: {
-          manifest: {
-            provider: "EHRI"
-          }
-        },
+        //manifests: {
+        //  manifest: {
+        //    provider: "EHRI",
+        //  }
+        //},
         workspace: {
-          isWorkspaceAddVisible: false,
-          allowNewWindows: false,
+          type: 'mosaic',
         },
         workspaceControlPanel: {
-          enabled: true
+          enabled: false
         },
         windows: [{
+          manifestId: manifest,
+          //view: 'gallery',
           loadedManifest: manifest,
           canvasIndex: 0,
           thumbnailNavigationPosition: 'far-bottom',
-        }]
+        }],
+        window: {
+          allowClose: false, // Prevent the user from closing this window
+          allowMaximize: false,
+          defaultSideBarPanel: 'info',
+          sideBarOpenByDefault: true,
+          views: [ // Only allow the user to select single and gallery view
+            { key: 'single' },
+            { key: 'gallery' },
+          ]
+        },
       });
     </script>
 </body>
