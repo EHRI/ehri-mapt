@@ -74,13 +74,11 @@ if st.button("Publish Website"):
 
     st.write("Generating site...")
     html = env.get_template("index.html.j2").render(name=TEMP_NAME, data=desc)
-    st.download_button("Download HTML", file_name=desc.slug() + ".html", data=html)
 
     st.write("Uploading data...")
     upload(TEMP_NAME, html, xml, manifest)
     st.markdown("### Done!")
-    st.write("Your site should be available in a few minutes.")
-
+    st.write(f"Your site should be available in a few minutes at [{url}]({url})")
 
 
 col1, col2 = st.columns(2)
