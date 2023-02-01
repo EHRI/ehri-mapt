@@ -39,7 +39,7 @@ ead = SimpleEad(
     items=[EadItem(
                 ident,
                 Identity(value_or_default(key(ident))),
-                Description(scope=value_or_default(scope(ident))), url, thumb_url, []) \
+                Description(scope=value_or_default(scope(ident))), url, thumb_url, [])
            for ident, url, thumb_url in value_or_default("items", [])]
 )
 
@@ -56,7 +56,7 @@ with st.expander("Show HTML"):
     st.code(html, language="html")
 st.download_button("Download HTML", file_name=ead.slug() + ".html", data=html)
 
-manifest = ead.to_json()
+manifest = ead.to_json(baseurl=st.secrets.iiif.server_url)
 with st.expander("Show IIIF Manifest"):
     st.code(manifest, language="json")
 st.download_button("Download IIIF Manifest", file_name=ead.slug() + ".json", data=manifest)

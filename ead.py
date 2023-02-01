@@ -2,8 +2,9 @@
 
 import os
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
 from datetime import date
-from typing import NamedTuple, List, Tuple, Dict, Union
+from typing import NamedTuple, List, Dict, Union
 from typing import Optional
 from urllib.parse import quote_plus
 
@@ -11,12 +12,10 @@ import langcodes
 from iiif_prezi3 import Range
 from slugify import slugify
 
-from lib import IIIF_SERVER
-
 
 class Identity(NamedTuple):
     # Section 1: identification
-    title: str = "Default Collection Name"
+    title: str = ""
     datedesc: Optional[date] = None
     extent: str = ""
 
@@ -29,7 +28,7 @@ class Identity(NamedTuple):
 class Description(NamedTuple):
     # Section 2: description
     biog: str = ""
-    scope: str = "Default collection description..."
+    scope: str = ""
     lang: List[str] = []
 
     def done(self) -> bool:
@@ -68,15 +67,20 @@ class EadItem(NamedTuple):
     thumb_url: Union[str, None]
     items: List['EadItem']
 
+    @classmethod
+    def make(cls, id: str, identity: Identity):
+        return cls(id, identity, Description(), None, None, [])
+
+
     def __repr__(self):
         return f"<EadItem '{self.id}' '{self.identity.title}' (children: {len(self.items)})>"
 
 
 class SimpleEad(NamedTuple):
-    identity: Identity = Identity()
-    description: Description = Description()
-    contact: Contact = Contact()
-    items: List[EadItem] = []
+    identity: Identity
+    description: Description
+    contact: Contact
+    items: List[EadItem]
 
     def done(self):
         return self.identity.done() and \
@@ -86,30 +90,27 @@ class SimpleEad(NamedTuple):
     def slug(self) -> str:
         return slugify(self.identity.title)
 
-    def nest_parents(self, parents: Dict[str, EadItem]) -> Dict[str, EadItem]:
-        def nest(flat: Dict[str, EadItem], nested: Dict[str, EadItem]) -> Dict[str, EadItem]:
+    def nest_parents(self, parents: OrderedDict[str, EadItem]) -> OrderedDict[str, EadItem]:
+        def nest(flat: OrderedDict[str, EadItem], nested: OrderedDict[str, EadItem]) -> OrderedDict[str, EadItem]:
             # break
             if not flat:
                 return nested
 
-            path, item = flat.popitem()
+            path, item = flat.popitem(False)
             *parts, last = path.split('/')
             if not parts:
                 nested[path] = item
             else:
                 p_path = '/'.join(parts)
-                p = flat.get(p_path) if p_path in flat else EadItem(
+                p = flat.get(p_path) if p_path in flat else EadItem.make(
                     id=p_path,
-                    identity=Identity(title=parts[-1]),
-                    content=Description(),
-                    url=None,
-                    thumb_url=None,
-                    items=[]
+                    identity=Identity(title=parts[-1])
                 )
                 p.items.insert(0, item)
+                # p.items.append(item)
                 flat[p_path] = p
             return nest(flat, nested)
-        return nest(parents, {})
+        return nest(parents, OrderedDict())
 
 
     def to_xml(self):
@@ -169,7 +170,7 @@ class SimpleEad(NamedTuple):
             scopecontentp = ET.SubElement(scopecontent, 'p')
             scopecontentp.text = self.description.scope
 
-        parents = {}
+        parents = OrderedDict()
         for item in self.items:
             prefix, *path_parts, _ = item.id.split('/')
             if len(path_parts) == 0:
@@ -216,10 +217,9 @@ class SimpleEad(NamedTuple):
         _pretty_print(root, pad='    ')
         return ET.tostring(root, encoding="unicode")
 
-    def to_json(self):
+    def to_json(self, baseurl: str):
         from iiif_prezi3 import Manifest, Canvas, CanvasRef, Annotation, AnnotationPage, ResourceItem, Range
 
-        baseurl = f"https://iiif.ehri-project-test.eu/iiif/3/"
 
         manifest_items = []
         for item in self.items:
@@ -254,14 +254,12 @@ class SimpleEad(NamedTuple):
         ranges = {}
 
         for item in self.items:
-            print(f"Processing structure for {item.id}")
             canvas_ref: str = baseurl + quote_plus(item.id)
             path_parts: List[str] = item.id.split('/')[1:-1]
             if len(path_parts) == 0:
                 continue
 
             dir_path = os.path.join(path_parts[0], *path_parts[1:])
-            print(f"Processing path {dir_path}")
 
             cr = CanvasRef(id=canvas_ref, type="Canvas", label={"en": [item.identity.title or item.id]})
             r = ranges.get(dir_path)
@@ -280,7 +278,7 @@ class SimpleEad(NamedTuple):
         manifest_structures.extend(nested_ranges.values())
 
         manifest = Manifest(
-            id=IIIF_SERVER + "manifest.json",
+            id=baseurl + "manifest.json",
             label={"en": [self.identity.title]},
             items=manifest_items,
             structures=manifest_structures)

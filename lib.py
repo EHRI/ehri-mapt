@@ -4,7 +4,6 @@ import boto3
 import streamlit as st
 from botocore.exceptions import ClientError
 
-IIIF_SERVER = "https://iiif.ehri-project-test.eu/iiif/3/"
 THUMB_DIR = ".thumb"
 
 TITLE = "title"
