@@ -164,6 +164,7 @@ def create_site(name: str):
                 'DefaultCacheBehavior': {
                     # 'CachePolicyId': '658327ea-f89d-4fab-a63d-7e88639e58f6',  # CachingOptimized (from docs)
                     'CachePolicyId': '4135ea2d-6df8-44a3-9df3-4b5a84be39ad',  # CachingDisabled (from docs)
+                    'ResponseHeadersPolicyId': '5cc3b908-e619-4b99-88e5-2cf7f45965bd', # Allow CORS
                     'TargetOriginId': origin_id,
                     'ViewerProtocolPolicy': 'allow-all',
                     'AllowedMethods': {
