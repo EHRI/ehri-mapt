@@ -172,16 +172,15 @@ class SimpleEad(NamedTuple):
 
         parents = OrderedDict()
         for item in self.items:
-            prefix, *path_parts, _ = item.id.split('/')
+            *path_parts, _ = item.id.split('/')
             if len(path_parts) == 0:
                 continue
 
             dir_path = os.path.join(path_parts[0], *path_parts[1:])
-            print(f"Processing path {dir_path}")
             p = parents.get(dir_path)
             if p is None:
                 p = EadItem(
-                    id=os.path.join(prefix, dir_path),
+                    id=dir_path,
                     identity=Identity(title=path_parts[-1]),
                     content=Description(),
                     url=None,
@@ -217,13 +216,12 @@ class SimpleEad(NamedTuple):
         _pretty_print(root, pad='    ')
         return ET.tostring(root, encoding="unicode")
 
-    def to_json(self, baseurl: str):
+    def to_json(self, baseurl: str, prefix: str):
         from iiif_prezi3 import Manifest, Canvas, CanvasRef, Annotation, AnnotationPage, ResourceItem, Range
-
 
         manifest_items = []
         for item in self.items:
-            canvas_ref = baseurl + quote_plus(item.id)
+            canvas_ref = baseurl + quote_plus(prefix + item.id)
             canvas = Canvas(
                 id=canvas_ref,
                 label={"en": [item.identity.title or item.id]},
@@ -254,8 +252,8 @@ class SimpleEad(NamedTuple):
         ranges = {}
 
         for item in self.items:
-            canvas_ref: str = baseurl + quote_plus(item.id)
-            path_parts: List[str] = item.id.split('/')[1:-1]
+            canvas_ref: str = baseurl + quote_plus(prefix + item.id)
+            *path_parts, _ = item.id.split('/')
             if len(path_parts) == 0:
                 continue
 

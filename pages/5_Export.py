@@ -56,7 +56,7 @@ with st.expander("Show HTML"):
     st.code(html, language="html")
 st.download_button("Download HTML", file_name=ead.slug() + ".html", data=html)
 
-manifest = ead.to_json(baseurl=st.secrets.iiif.server_url)
+manifest = ead.to_json(baseurl=st.secrets.iiif.server_url, prefix=st.secrets.s3_credentials.prefix)
 with st.expander("Show IIIF Manifest"):
     st.code(manifest, language="json")
 st.download_button("Download IIIF Manifest", file_name=ead.slug() + ".json", data=manifest)

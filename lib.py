@@ -66,8 +66,8 @@ def load_files():
         if THUMB_DIR in key:
             continue
 
-        # strip_prefix = key[len(st.secrets.s3_credentials.prefix + "/"):]
-        item_id = os.path.splitext(key)[0]
+        path_no_ext = os.path.splitext(key)[0]
+        item_id = path_no_ext[len(st.secrets.s3_credentials.prefix):]
         url = create_presigned_url(s3, key)
         thumb_url = create_presigned_url(s3, thumb(key))
         items.append((item_id, url, thumb_url))
