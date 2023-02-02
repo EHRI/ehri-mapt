@@ -9,14 +9,14 @@
     <style>
         body {
             display: grid;
-            color: #3d3d36;
-            background-color: #e2dcd5;
-            font-family: Source-Serif-Pro, sans-serif;
+            color: #3b3b34;
+            background-color: #fff;
+            font-family: Source-Serif-Pro, serif;
 
-            grid-template-areas: ". header ." ". main ." ". items ." ". footer .";
-            grid-template-rows: min-content min-content auto min-content;
-            grid-template-columns: 20% 1fr 20%;
-            grid-gap: 1rem 0;
+            grid-template-areas: "header" "main" "footer";
+            grid-template-rows: min-content auto min-content;
+            grid-template-columns: 100%;
+
             margin: 0;
             padding: 0;
             height: 100vh;
@@ -37,26 +37,67 @@
 
         header {
             grid-area: header;
+            display: grid;
+            grid-template-areas: ". content .";
+            grid-template-columns: 10% 1fr 10%;
+
+            background-color: #3b3b34;
+            color: #fff;
+
+
         }
+        .header-content {
+            grid-area: content;
+            padding: 1rem 0;
+        }
+
         main {
+            display: grid;
+            grid-template-areas: ". meta items .";
+            grid-template-columns: 10% 1fr 2fr 10%;
+
             grid-area: main;
+            padding: 1rem 0;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-areas: ". meta ." ". items .";
+                grid-template-columns: 10% 1fr 10%;
+                grid-template-rows: min-content auto;
+                grid-gap: 1rem 0;
+            }
+        }
+
+        #metadata {
+            grid-area: meta;
         }
 
         #items {
+            grid-area: items;
             margin: 0;
             padding: 0;
-            grid-area: items;
-            box-shadow: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12);
         }
+
         #footer {
             grid-area: footer;
-            padding: 1rem;
+            display: grid;
+            grid-template-areas: ". content .";
+            grid-template-columns: 10% 1fr 10%;
+
+            padding: 1rem 0;
             font-size: 0.9rem;
             color: #333;
+            background-color: #dad7be;
+        }
+        .footer-content {
+            grid-area: content;
+
         }
         #viewer {
             position: relative;
             height: 100%;
+            box-shadow: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12);
         }
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Barlow+Semi+Condensed:600">
@@ -66,57 +107,54 @@
 </head>
 <body>
     <header>
-        <h1>{{ data.identity.title }}</h1>
+        <div class="header-content">
+            <h1>{{ data.identity.title }}</h1>
+        </div>
     </header>
 
     <main>
-        <article>
-            <aside class="metadata">
-                <address>
-                    {{ data.contact.holder }}
-                    <br/>
-                    {{ data.contact.street }}
-                    <br/>
-                    {{ data.contact.postcode }}
-                </address>
-            </aside>
+        <aside id="metadata">
+            <address>
+                {{ data.contact.holder }}
+                <br/>
+                {{ data.contact.street }}
+                <br/>
+                {{ data.contact.postcode }}
+            </address>
 
             {% if data.description.biog %}
-            <h2>Biographical History</h2>
-            <p class="biographical-history">
-                {{ data.description.biog }}
-            </p>
+                <h2>Biographical History</h2>
+                <p class="biographical-history">
+                    {{ data.description.biog }}
+                </p>
             {% endif %}
             {% if data.description.scope %}
-            <h2>The Collection</h2>
-            <p class="scope-and-content">
-                {{ data.description.scope }}
-            </p>
+                <h2>The Collection</h2>
+                <p class="scope-and-content">
+                    {{ data.description.scope }}
+                </p>
             {% endif %}
-        </article>
 
-        <section id="export">
             <h2>Download as XML</h2>
             <a href="{{ name }}.xml" target="_blank">EAD 2002</a>
-        </section>
+        </aside>
 
+        <section id="items">
+            <div id="viewer"></div>
+        </section>
     </main>
-    <section id="items">
-        <div id="viewer"></div>
-    </section>
+
     <footer id="footer">
-        &copy; EHRI Project 2023
+        <div class="footer-content">
+            &copy; EHRI Project 2023
+        </div>
     </footer>
+
     <script>
       let manifest = document.location.origin + "/{{ name }}.json";
 
       Mirador.viewer({
         id: "viewer",
-        //manifests: {
-        //  manifest: {
-        //    provider: "EHRI",
-        //  }
-        //},
         workspace: {
           type: 'mosaic',
         },
@@ -139,6 +177,24 @@
             { key: 'single' },
             { key: 'gallery' },
           ]
+        },
+        themes: {
+          dark: {
+            palette: {
+              type: 'dark',
+              primary: {
+                main: '#84004c',
+              },
+            },
+          },
+          light: {
+            palette: {
+              type: 'light',
+              primary: {
+                main: '#84004c',
+              },
+            },
+          },
         },
       });
     </script>
