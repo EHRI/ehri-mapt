@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote_plus
 
 import boto3
 import streamlit as st
@@ -19,31 +20,9 @@ POSTCODE = "postcode"
 EXPIRATION = 3600
 SITE_ID = "siteid"
 
+
 def value_or_default(key: str, default = ""):
     return st.session_state[key] if key in st.session_state else default
-
-
-def create_presigned_url(s3, object_name, expiration=EXPIRATION):
-    bucket_name = st.secrets.s3_credentials.bucket
-    # Generate a presigned URL for the S3 object
-    try:
-        response = s3.generate_presigned_url('get_object',
-                                             Params={'Bucket': bucket_name,
-                                                     'Key': object_name},
-                                             ExpiresIn=expiration)
-    except ClientError as e:
-        st.error(e)
-        return None
-
-    # The response contains the presigned URL
-    return response
-
-
-def thumb(name: str) -> str:
-    dn = os.path.dirname(name)
-    bn, _ = os.path.splitext(os.path.basename(name))
-    tn = bn + ".jpg"
-    return os.path.join(dn, THUMB_DIR, tn)
 
 
 def aws_client(service: str):
@@ -68,8 +47,8 @@ def load_files():
 
         path_no_ext = os.path.splitext(key)[0]
         item_id = path_no_ext[len(st.secrets.s3_credentials.prefix):]
-        url = create_presigned_url(s3, key)
-        thumb_url = create_presigned_url(s3, thumb(key))
+        url = st.secrets.iiif.server_url + quote_plus(key) + "/full/max/0/default.jpg"
+        thumb_url = st.secrets.iiif.server_url + quote_plus(key) + "/full/!75,100/0/default.jpg"
         items.append((item_id, url, thumb_url))
     return items
 
@@ -84,9 +63,6 @@ def init_page():
         st.session_state[SCOPE] = "[Default collection description.]"
 
     st.write("# WP11 Microarchives Test")
-
-    # if st.button("Show State"):
-    #     st.write(st.session_state)
 
 
 def get_random_string(length: int) -> str:

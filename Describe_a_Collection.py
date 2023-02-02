@@ -20,7 +20,7 @@ view = """<div style="display: grid; grid-gap: 1rem; grid-template-columns: 1fr 
 for i, (key, url, thumb_url) in enumerate(value_or_default("items", [])):
     view += "<div>"
     view += f"""<a href="{url}" target="_blank">
-<img src="{thumb_url}" width="150" height="auto" alt="{key}"  style="border: 1px solid #ccc"/></a>
+<img src="{thumb_url}" width="75" height="100" alt="{key}"  style="border: 1px solid #ccc"/></a>
 """
     view += f"""<a href="{url}" target="_blank">
 <h5>{key}</h5></a>

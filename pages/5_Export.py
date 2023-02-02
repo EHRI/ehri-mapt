@@ -65,6 +65,7 @@ if st.button("Publish Website"):
         baseurl=url,
         name=TEMP_NAME,
         service_url=st.secrets.iiif.server_url,
+        image_format=st.secrets.iiif.image_format,
         prefix=st.secrets.s3_credentials.prefix).to_json(desc)
 
     st.write("Generating site...")

@@ -14,12 +14,14 @@ class IIIFManifest():
                  baseurl: str,
                  name: str,
                  service_url: str,
+                 image_format: str,
                  prefix: str,
                  width: int = 768,
                  height: int = 1024):
         self.baseurl = baseurl
         self.name = name
         self.service_url = service_url
+        self.image_format = image_format
         self.prefix = prefix
         self.width = width
         self.height = height
@@ -32,7 +34,7 @@ class IIIFManifest():
             canvas = Canvas(
                 id=canvas_ref,
                 label={"en": [item.identity.title or item.id]},
-                thumbnail=[dict(id=f"{canvas_ref}.tif/full/!100,150/0/default.jpg", type="Image", format="image/jpeg")],
+                thumbnail=[dict(id=f"{canvas_ref}{self.image_format}/full/!100,150/0/default.jpg", type="Image", format="image/jpeg")],
                 height=self.width,
                 width=self.height,
                 items=[
@@ -44,7 +46,7 @@ class IIIFManifest():
                                 motivation="painting",
                                 target=canvas_ref,
                                 body=ResourceItem(
-                                    id=f"{canvas_ref}.tif/full/pct:50/0/default.jpg",
+                                    id=f"{canvas_ref}{self.image_format}/full/max/0/default.jpg",
                                     type="Image",
                                     format="image/jpeg"
                                 )
