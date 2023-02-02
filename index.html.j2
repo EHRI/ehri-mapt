@@ -8,6 +8,7 @@
 
     <style>
         body {
+            font-size: 14px;
             display: grid;
             color: #3b3b34;
             background-color: #fff;
@@ -40,6 +41,7 @@
             display: grid;
             grid-template-areas: ". content .";
             grid-template-columns: 10% 1fr 10%;
+            grid-gap: 1rem;
 
             background-color: #3b3b34;
             color: #fff;
@@ -55,9 +57,11 @@
             display: grid;
             grid-template-areas: ". meta items .";
             grid-template-columns: 10% 1fr 2fr 10%;
+            grid-gap: 1rem;
 
             grid-area: main;
             padding: 1rem 0;
+            overflow: hidden;
         }
 
         @media (max-width: 1024px) {
@@ -67,10 +71,15 @@
                 grid-template-rows: min-content auto;
                 grid-gap: 1rem 0;
             }
+            #metadata {
+                padding-right: 0;
+            }
         }
 
         #metadata {
             grid-area: meta;
+            padding-right: 1rem;
+            overflow-y: scroll;
         }
 
         #items {
@@ -79,11 +88,16 @@
             padding: 0;
         }
 
+        #metadata h2 {
+            font-size: 1.2rem;
+        }
+
         #footer {
             grid-area: footer;
             display: grid;
             grid-template-areas: ". content .";
             grid-template-columns: 10% 1fr 10%;
+            grid-gap: 1rem;
 
             padding: 1rem 0;
             font-size: 0.9rem;
@@ -98,6 +112,21 @@
             position: relative;
             height: 100%;
             box-shadow: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12);
+        }
+
+        dl {
+            display: grid;
+            grid-template: auto / 10rem 1fr;
+        }
+
+        dt {
+            font-weight: bold;
+            grid-column: 1;
+        }
+
+        dd {
+            grid-column: 2;
+            margin-bottom: .5rem;
         }
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Barlow+Semi+Condensed:600">
@@ -114,29 +143,45 @@
 
     <main>
         <aside id="metadata">
-            <address>
-                {{ data.contact.holder }}
-                <br/>
-                {{ data.contact.street }}
-                <br/>
-                {{ data.contact.postcode }}
-            </address>
+            <h2>Information</h2>
+            <dl>
+                <dt>Address:</dt>
+                <dd>
+                    <address>
+                        {{ data.contact.holder }}
+                        <br/>
+                        {{ data.contact.street }}
+                        <br/>
+                        {{ data.contact.postcode }}
+                    </address>
+                </dd>
+                {% if data.description.lang %}
+                <dt>Languages:</dt>
+                <dd>{{ data.description.languages()|join(', ') }}</dd>
+                {% endif %}
+                <dt>Download:</dt>
+                <dd>
+                    <a href="{{ name }}.xml" target="_blank">EAD 2002</a>
+                </dd>
+            </dl>
 
             {% if data.description.biog %}
                 <h2>Biographical History</h2>
-                <p class="biographical-history">
+                <div class="biographical-history">
+                    {%- markdown -%}
                     {{ data.description.biog }}
-                </p>
+                    {% endmarkdown %}
+                </div>
             {% endif %}
             {% if data.description.scope %}
                 <h2>The Collection</h2>
-                <p class="scope-and-content">
+                <div class="scope-and-content">
+                    {%- markdown -%}
                     {{ data.description.scope }}
-                </p>
+                    {% endmarkdown %}
+                </div>
             {% endif %}
 
-            <h2>Download as XML</h2>
-            <a href="{{ name }}.xml" target="_blank">EAD 2002</a>
         </aside>
 
         <section id="items">

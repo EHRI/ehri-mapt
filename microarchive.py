@@ -4,6 +4,7 @@ from datetime import date
 from typing import NamedTuple, List, Union
 from typing import Optional
 
+import langcodes
 from slugify import slugify
 
 
@@ -24,6 +25,9 @@ class Description(NamedTuple):
     biog: str = ""
     scope: str = ""
     lang: List[str] = []
+
+    def languages(self):
+        return [langcodes.get(code).display_name() for code in self.lang]
 
     def done(self) -> bool:
         return self.biog.strip() != "" or \

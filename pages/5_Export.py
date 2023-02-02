@@ -8,6 +8,7 @@ from iiif import IIIFManifest
 from lib import *
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 env = Environment(
+    extensions=['jinja_markdown.MarkdownExtension'],
     loader=FileSystemLoader(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
     autoescape=select_autoescape()
 )
@@ -58,9 +59,6 @@ if st.button("Publish Website"):
 
     st.write("Generating EAD...")
     xml = Ead().to_xml(desc)
-    with st.expander("Show EAD XML"):
-        st.code(xml, language="xml")
-    st.download_button("Download EAD XML", file_name=desc.slug() + ".xml", data=xml)
 
     st.write("Generating IIIF manifest...")
     manifest = IIIFManifest(
@@ -68,9 +66,6 @@ if st.button("Publish Website"):
         name=TEMP_NAME,
         service_url=st.secrets.iiif.server_url,
         prefix=st.secrets.s3_credentials.prefix).to_json(desc)
-    with st.expander("Show IIIF Manifest"):
-        st.code(manifest, language="json")
-    st.download_button("Download IIIF Manifest", file_name=desc.slug() + ".json", data=manifest)
 
     st.write("Generating site...")
     html = env.get_template("index.html.j2").render(name=TEMP_NAME, data=desc)
@@ -78,7 +73,7 @@ if st.button("Publish Website"):
     st.write("Uploading data...")
     upload(TEMP_NAME, html, xml, manifest)
     st.markdown("### Done!")
-    st.write(f"Your site should be available in a few minutes at [{url}]({url})")
+    st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 
 
 col1, col2 = st.columns(2)
