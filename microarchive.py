@@ -2,7 +2,7 @@
 import os.path
 from collections import OrderedDict
 from datetime import date
-from typing import NamedTuple, List, Union
+from typing import NamedTuple, List, Union, Callable
 from typing import Optional
 
 import langcodes
@@ -66,6 +66,14 @@ class Item(NamedTuple):
     thumb_url: Union[str, None]
     items: List['Item']
 
+    def is_dir(self):
+        return bool(self.items)
+
+    def is_leaf_dir(self):
+        if self.items and len([i for i in self.items if i.items]) == 0:
+            return True
+        return False
+
     @classmethod
     def make(cls, id: str, identity: Identity):
         return cls(id, identity, Description(), None, None, [])
@@ -119,6 +127,23 @@ class MicroArchive(NamedTuple):
 
         ordered = OrderedDict([(it.id, it) for it in reversed(sorted(lookup.values(), key=lambda it: it.id))])
         return sorted(nest(ordered, OrderedDict()).values())
+
+    def leaf_dirs(self) -> List[Item]:
+        """Return a list of directories containing only items (no child directories)"""
+        def walk(item: Item, f: Callable):
+            for child in item.items:
+                walk(child, f)
+            f(item)
+
+        leaf_dirs = []
+
+        def test(item: Item):
+            if item.is_leaf_dir():
+                leaf_dirs.append(item)
+
+        for item in self.hierarchical_items():
+            walk(item, test)
+        return leaf_dirs
 
     def done(self):
         return self.identity.done() and \

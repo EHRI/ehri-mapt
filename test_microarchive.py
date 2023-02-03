@@ -27,3 +27,9 @@ def test_hierarchical_items(archive: MicroArchive):
 def test_hierarchical_items_no_hierarchy(flat_archive: MicroArchive):
     no_hierarchy = flat_archive.hierarchical_items()
     assert len(no_hierarchy) == 2, "flat archive has unexpected number of top-level items"
+
+
+def test_leaf_dirs(archive: MicroArchive):
+    leaf_dirs = archive.leaf_dirs()
+    assert ['Dir1/Dir1-1', 'Dir2/Dir2-1'] == [
+        it.id for it in leaf_dirs], "unexpected leaf dirs"
