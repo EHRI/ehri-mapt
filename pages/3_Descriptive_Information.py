@@ -28,6 +28,7 @@ st.session_state[LANGS] = st.multiselect("Languages Used",
                default=value_or_default(LANGS, []),
                help="Language or languages used in the collection's items")
 
+st.markdown("---")
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Context Information")

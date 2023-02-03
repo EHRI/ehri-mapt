@@ -5,6 +5,8 @@ import boto3
 import streamlit as st
 from botocore.exceptions import ClientError
 
+from microarchive import MicroArchive, Identity, Contact, Description, Item
+
 THUMB_DIR = ".thumb"
 
 TITLE = "title"
@@ -21,7 +23,7 @@ EXPIRATION = 3600
 SITE_ID = "siteid"
 
 
-def value_or_default(key: str, default = ""):
+def value_or_default(key, default = ""):
     return st.session_state[key] if key in st.session_state else default
 
 
@@ -98,6 +100,33 @@ def upload(name: str, index: str, xml: str, json: str):
             ContentType=content_type,
             Body=data.encode('utf-8')
         )
+
+
+def make_archive():
+    def key(id: str) -> str:
+        return f"{id}.title"
+
+    def scope(id: str) -> str:
+        return f"{id}.scope"
+
+    return MicroArchive(
+        identity=Identity(
+            title=value_or_default(TITLE),
+            datedesc=value_or_default(DATE_DESC, ""),
+            extent=value_or_default(EXTENT)),
+        contact=Contact(
+            holder=value_or_default(HOLDER),
+            street=value_or_default(STREET),
+            postcode=value_or_default(POSTCODE)),
+        description=Description(biog=value_or_default(BIOG_HIST),
+                                scope=value_or_default(SCOPE),
+                                lang=value_or_default(LANGS, [])),
+        items=[Item(
+            ident,
+            Identity(value_or_default(key(ident))),
+            Description(scope=value_or_default(scope(ident))), url, thumb_url, [])
+            for ident, url, thumb_url in value_or_default("items", [])]
+    )
 
 
 def create_site(name: str):

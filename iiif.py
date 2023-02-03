@@ -1,12 +1,10 @@
 """Render a MicroArchive as a IIIF manifest"""
-import os
-from collections import OrderedDict
-from typing import Dict
+from typing import Union
 from urllib.parse import quote_plus
 
 from iiif_prezi3 import Manifest, Canvas, CanvasRef, Annotation, AnnotationPage, ResourceItem, Range
 
-from microarchive import MicroArchive
+from microarchive import MicroArchive, Item
 
 
 class IIIFManifest():
@@ -58,30 +56,17 @@ class IIIFManifest():
             manifest_items.append(canvas)
 
         manifest_structures = []
-        ranges = OrderedDict()
-
-        for item in data.items:
-            *path_parts, _ = item.id.split('/')
-            if len(path_parts) == 0:
-                continue
-
-            dir_path = os.path.join(path_parts[0], *path_parts[1:])
-
-            canvas_ref: str = self.service_url + quote_plus(self.prefix + item.id)
-            cr = CanvasRef(id=canvas_ref, type="Canvas", label={"en": [item.identity.title or item.id]})
-            r = ranges.get(dir_path) if dir_path in ranges else Range(
-                id=f"{self.baseurl}/{self.name}/range/{dir_path}",
-                label={"en": [path_parts[-1]]},
-                items=[]
-            )
-            r.items.append(cr)
-            ranges[dir_path] = r
-
-        # go through the ranges, create any parents without direct item children,
-        # and nest any sub-ranges
-        print(f"Nesting ranges: {ranges.keys()}")
-        nested_ranges = self.nest_ranges(ranges)
-        manifest_structures.extend(nested_ranges.values())
+        for item in data.hierarchical_items():
+            def make_range(item: Item) -> Union[Range, CanvasRef]:
+                if item.items:
+                    return Range(id=f"{self.baseurl}/{self.name}/range/{item.id}",
+                                  label={"en": [item.identity.title]},
+                                  items=[make_range(i) for i in item.items])
+                else:
+                    return CanvasRef(id=self.service_url + quote_plus(self.prefix + item.id),
+                                     type="Canvas", label={"en": [item.identity.title or item.id]})
+            if item.items:
+                manifest_structures.append(make_range(item))
 
         manifest = Manifest(
             id=f"{self.baseurl}/{self.name}.json",
@@ -100,32 +85,3 @@ class IIIFManifest():
             structures=manifest_structures)
 
         return manifest.json(indent=2)
-
-    def nest_ranges(self, ranges: OrderedDict[str, Range]) -> OrderedDict[str, Range]:
-        def nest(flat: OrderedDict[str, Range], nested: OrderedDict[str, Range]) -> OrderedDict[str, Range]:
-            # break condition:
-            if not flat:
-                return nested
-
-            path, r = flat.popitem(False)
-            *parts, last = path.split('/')
-            print(f"Nesting item {path} with {len(r.items)} children")
-            if not parts:
-                print("No parts, done")
-                nested[path] = r
-            else:
-                # create a range for the last component and
-                # insert it into those to be processed
-                p_path = '/'.join(parts)
-                print(f"Looking for parent path {p_path}")
-                p = flat.get(p_path) if p_path in flat else Range(
-                    id=f"{self.baseurl}/{self.name}/range/{p_path}",
-                    label={"en": [parts[-1]]},
-                    items=[]
-                )
-                # ranges inserted at the beginning of items
-                #p.items.insert(0, r)
-                p.items.append(r)
-                flat[p_path] = p
-            return nest(flat, nested)
-        return nest(ranges, OrderedDict())

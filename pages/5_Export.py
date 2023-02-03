@@ -2,7 +2,6 @@
 from streamlit_extras.switch_page_button import switch_page
 
 from ead import Ead
-from microarchive import Identity, Contact, Description, MicroArchive, Item
 
 from iiif import IIIFManifest
 from lib import *
@@ -14,13 +13,6 @@ env = Environment(
 )
 
 
-def key(id: str) -> str:
-    return f"{id}.title"
-
-
-def scope(id: str) -> str:
-    return f"{id}.scope"
-
 
 st.set_page_config(page_title="Export Information")
 
@@ -28,30 +20,14 @@ init_page()
 
 st.write("## Export Information")
 
-desc = MicroArchive(
-    identity=Identity(
-        title=value_or_default(TITLE),
-        datedesc=value_or_default(DATE_DESC, None),
-        extent=value_or_default(EXTENT)),
-    contact=Contact(
-        holder=value_or_default(HOLDER),
-        street=value_or_default(STREET),
-        postcode=value_or_default(POSTCODE)),
-    description=Description(biog=value_or_default(BIOG_HIST),
-                            scope=value_or_default(SCOPE),
-                            lang=value_or_default(LANGS, [])),
-    items=[Item(
-                ident,
-                Identity(value_or_default(key(ident))),
-                Description(scope=value_or_default(scope(ident))), url, thumb_url, [])
-           for ident, url, thumb_url in value_or_default("items", [])]
-)
-
+# Build the representation...
+desc = make_archive()
 
 TEMP_NAME = "testing"
 
-
-st.markdown("---")
+st.info("""Publishing this data will create a website containing the metadata for this
+           collection and a browser for any images.\n\nTypically the site will take **1-5 minutes** to become live.
+            """)
 if st.button("Publish Website"):
     site_id = create_site(TEMP_NAME)
     url = f"https://{site_id}"
@@ -77,6 +53,7 @@ if st.button("Publish Website"):
     st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 
 
+st.markdown("---")
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Item Information")

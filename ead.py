@@ -70,32 +70,9 @@ class Ead():
             scopecontentp = ET.SubElement(scopecontent, 'p')
             scopecontentp.text = data.description.scope
 
-        parents = OrderedDict()
-        for item in data.items:
-            *path_parts, _ = item.id.split('/')
-            if len(path_parts) == 0:
-                continue
-
-            dir_path = os.path.join(path_parts[0], *path_parts[1:])
-            p = parents.get(dir_path)
-            if p is None:
-                p = Item(
-                    id=dir_path,
-                    identity=Identity(title=path_parts[-1]),
-                    content=Description(),
-                    url=None,
-                    thumb_url=None,
-                    items=[]
-                )
-            p.items.append(item)
-            parents[dir_path] = p
-
-        print(f"Parents: {parents}")
-
         if data.items:
             dsc = ET.SubElement(archdesc, 'dsc')
-            for item in self.nest_parents(parents).values():
-
+            for item in data.hierarchical_items():
                 def make_child(child: Item, parent: ET.Element, num: int):
                     c = ET.SubElement(parent, f"c{num}", {'level': 'otherlevel'})
                     did = ET.SubElement(c, 'did')
@@ -115,28 +92,6 @@ class Ead():
 
         _pretty_print(root, pad='    ')
         return ET.tostring(root, encoding="unicode")
-
-    def nest_parents(self, parents: OrderedDict[str, Item]) -> OrderedDict[str, Item]:
-        def nest(flat: OrderedDict[str, Item], nested: OrderedDict[str, Item]) -> OrderedDict[str, Item]:
-            # break
-            if not flat:
-                return nested
-
-            path, item = flat.popitem(False)
-            *parts, last = path.split('/')
-            if not parts:
-                nested[path] = item
-            else:
-                p_path = '/'.join(parts)
-                p = flat.get(p_path) if p_path in flat else Item.make(
-                    id=p_path,
-                    identity=Identity(title=parts[-1])
-                )
-                p.items.insert(0, item)
-                # p.items.append(item)
-                flat[p_path] = p
-            return nest(flat, nested)
-        return nest(parents, OrderedDict())
 
 
 def _pretty_print(current, parent=None, index=-1, depth=0, pad='\t'):

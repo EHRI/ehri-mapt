@@ -31,6 +31,7 @@ st.session_state[EXTENT] = st.text_area("Type of material",
                   "photographs'",
              value=value_or_default(EXTENT, f"{len(items)} {p.plural('scanned image', len(items))}"))
 
+st.markdown("---")
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Describe a Collection")

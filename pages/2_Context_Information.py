@@ -23,6 +23,7 @@ st.session_state[POSTCODE] = st.text_input("Postal code",
               help="The postal code where this collection is located",
               value=value_or_default(POSTCODE))
 
+st.markdown("---")
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Identifying Information")

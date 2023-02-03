@@ -31,6 +31,7 @@ for i, (key, url, thumb_url) in enumerate(value_or_default("items", [])):
                                                   height=30)
     st.markdown("---")
 
+st.markdown("---")
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Descriptive Information")
