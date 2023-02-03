@@ -60,6 +60,7 @@ def test_to_json(archive):
         baseurl="http://example.com/",
         name="test",
         service_url="http://example.com/iiif/3/",
+        image_format=".jpg",
         prefix="foobar/").to_json(archive)
     print(manifest)
     data = json.loads(manifest)
