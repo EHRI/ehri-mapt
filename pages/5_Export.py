@@ -13,7 +13,6 @@ env = Environment(
 )
 
 
-
 st.set_page_config(page_title="Export Information")
 
 init_page()
@@ -29,7 +28,8 @@ st.info("""Publishing this data will create a website containing the metadata fo
            collection and a browser for any images.\n\nTypically the site will take **1-5 minutes** to become live.
             """)
 if st.button("Publish Website"):
-    site_id = create_site(TEMP_NAME)
+    site_suffix = get_random_string(5)
+    site_id = create_site(TEMP_NAME, site_suffix)
     url = f"https://{site_id}"
     st.markdown(f"Waiting for site to be available at: [{url}]({url})")
 
@@ -48,7 +48,7 @@ if st.button("Publish Website"):
     html = env.get_template("index.html.j2").render(name=TEMP_NAME, data=desc)
 
     st.write("Uploading data...")
-    upload(TEMP_NAME, html, xml, manifest)
+    upload(TEMP_NAME, site_suffix, html, xml, manifest)
     st.markdown("### Done!")
     st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 
