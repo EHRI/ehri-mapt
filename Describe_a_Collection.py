@@ -9,9 +9,6 @@ st.set_page_config(page_title="Describe a Collection")
 
 init_page()
 
-st.info("""This bit will allow the user to select a folder of images from some Cloud storage.
-        For the moment I have hard-coded a set of scans on AWS:""")
-
 items = value_or_default('items', [])
 
 st.markdown(f"### Items found: {len(items)}")

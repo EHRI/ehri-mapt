@@ -64,7 +64,7 @@ def init_page():
     if SCOPE not in st.session_state:
         st.session_state[SCOPE] = "[Default collection description.]"
 
-    st.write("# WP11 Microarchives Test")
+    st.write("# Micro Archive Publication Tool")
 
 
 def get_random_string(length: int) -> str:
