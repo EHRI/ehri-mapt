@@ -20,6 +20,7 @@ POSTCODE = "postcode"
 
 EXPIRATION = 3600
 SITE_ID = "siteid"
+SITE_SUFFIX = "sitesuffix"
 
 
 def value_or_default(key, default = ""):

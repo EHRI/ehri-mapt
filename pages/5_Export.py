@@ -1,4 +1,4 @@
-
+import streamlit
 from streamlit_extras.switch_page_button import switch_page
 
 from ead import Ead
@@ -25,8 +25,13 @@ desc = make_archive()
 st.info("""Publishing this data will create a website containing the metadata for this
            collection and a browser for any images.\n\nTypically the site will take **1-5 minutes** to become live.
             """)
+site_suffix = get_random_string(5)
+if SITE_SUFFIX in st.session_state:
+    site_suffix = st.session_state[SITE_SUFFIX]
+else:
+    st.session_state[SITE_SUFFIX] = site_suffix
+
 if st.button("Publish Website"):
-    site_suffix = get_random_string(5)
     name = desc.slug() or site_suffix
     site_id = create_site(name, site_suffix)
     url = f"https://{site_id}"
