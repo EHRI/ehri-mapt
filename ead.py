@@ -29,9 +29,10 @@ class Ead():
         eadid = ET.SubElement(eadheader, 'eadid')
         eadid.text = data.slug()
         filedesc = ET.SubElement(eadheader, 'filedesc')
-        titleproper = ET.SubElement(filedesc, 'titleproper')
+        titlestmt = ET.SubElement(filedesc, 'titlestmt')
+        titleproper = ET.SubElement(titlestmt, 'titleproper')
         titleproper.text = data.identity.title
-        publicationstmt = ET.SubElement(eadheader, 'publicationstmt')
+        publicationstmt = ET.SubElement(filedesc, 'publicationstmt')
         if data.contact.lines():
             address = ET.SubElement(publicationstmt, 'address')
             for line in data.contact.lines():
@@ -45,7 +46,7 @@ class Ead():
         langusage = ET.SubElement(profiledesc, 'langusage')
         language = ET.SubElement(langusage, 'language', {'langcode': 'eng'})
         language.text = "English"
-        archdesc = ET.SubElement(root, 'archdesc')
+        archdesc = ET.SubElement(root, 'archdesc', {'level': 'collection'})
         did = ET.SubElement(archdesc, 'did')
         unitid = ET.SubElement(did, 'unitid')
         unitid.text = data.slug()
