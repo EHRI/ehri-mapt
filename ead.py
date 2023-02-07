@@ -1,12 +1,9 @@
-import os
-from collections import OrderedDict
 from datetime import date
-
 from xml.etree import ElementTree as ET
 
 import langcodes
 
-from microarchive import MicroArchive, Item, Identity, Description
+from microarchive import MicroArchive, Item
 
 
 class Ead():

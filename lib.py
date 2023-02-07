@@ -3,7 +3,6 @@ from urllib.parse import quote_plus
 
 import boto3
 import streamlit as st
-from botocore.exceptions import ClientError
 
 from microarchive import MicroArchive, Identity, Contact, Description, Item
 
