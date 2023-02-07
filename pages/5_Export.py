@@ -22,14 +22,13 @@ st.write("## Export Information")
 # Build the representation...
 desc = make_archive()
 
-TEMP_NAME = "testing"
-
 st.info("""Publishing this data will create a website containing the metadata for this
            collection and a browser for any images.\n\nTypically the site will take **1-5 minutes** to become live.
             """)
 if st.button("Publish Website"):
     site_suffix = get_random_string(5)
-    site_id = create_site(TEMP_NAME, site_suffix)
+    name = desc.slug() or site_suffix
+    site_id = create_site(name, site_suffix)
     url = f"https://{site_id}"
     st.markdown(f"Waiting for site to be available at: [{url}]({url})")
 
@@ -39,16 +38,16 @@ if st.button("Publish Website"):
     st.write("Generating IIIF manifest...")
     manifest = IIIFManifest(
         baseurl=url,
-        name=TEMP_NAME,
+        name=name,
         service_url=st.secrets.iiif.server_url,
         image_format=st.secrets.iiif.image_format,
         prefix=st.secrets.s3_credentials.prefix).to_json(desc)
 
     st.write("Generating site...")
-    html = env.get_template("index.html.j2").render(name=TEMP_NAME, data=desc)
+    html = env.get_template("index.html.j2").render(name=name, data=desc)
 
     st.write("Uploading data...")
-    upload(TEMP_NAME, site_suffix, html, xml, manifest)
+    upload(name, site_suffix, html, xml, manifest)
     st.markdown("### Done!")
     st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 
