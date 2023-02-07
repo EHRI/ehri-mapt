@@ -72,7 +72,7 @@ class Ead():
             dsc = ET.SubElement(archdesc, 'dsc')
             for item in data.hierarchical_items():
                 def make_child(child: Item, parent: ET.Element, num: int):
-                    c = ET.SubElement(parent, f"c{num}", {'level': 'otherlevel'})
+                    c = ET.SubElement(parent, "c{:02d}".format(num), {'level': 'otherlevel'})
                     did = ET.SubElement(c, 'did')
                     unitid = ET.SubElement(did, 'unitid')
                     unitid.text = child.id
