@@ -13,10 +13,10 @@ def test_to_xml(archive):
     ead_xml = Ead().to_xml(archive)
     print(ead_xml)
     doc = ET.XML(ead_xml)
-    item1 = doc.find('./e:archdesc/e:dsc/e:c1/e:c2/e:c3/e:did/e:unitid', EAD_NS)
+    item1 = doc.find('./e:archdesc/e:dsc/e:c01/e:c02/e:c03/e:did/e:unitid', EAD_NS)
     assert item1 is not None, "could not find item1 'unitid' element"
     assert item1.text == "Dir1/Dir1-1/item1"
 
-    item3 = doc.find('./e:archdesc/e:dsc/e:c1[2]/e:c2/e:c3/e:did/e:unitid', EAD_NS)
+    item3 = doc.find('./e:archdesc/e:dsc/e:c01[2]/e:c02/e:c03/e:did/e:unitid', EAD_NS)
     assert item3 is not None, "could not find item3 'unitid' element"
     assert item3.text == "Dir2/Dir2-1/item3"
