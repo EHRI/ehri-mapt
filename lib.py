@@ -34,7 +34,7 @@ def aws_client(service: str):
                         aws_secret_access_key=st.secrets.s3_credentials.secret_key,)
 
 
-@st.experimental_memo(ttl=EXPIRATION)
+@st.cache_data(ttl=EXPIRATION)
 def load_files():
     s3 = aws_client('s3')
     r = s3.list_objects_v2(
