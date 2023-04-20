@@ -1,11 +1,19 @@
-import streamlit
 from streamlit_extras.switch_page_button import switch_page
 
+import streamlit as st
+
+import os
+
+from lib import make_archive, init_page, SITE_ID
+
+from store import IIIFSettings, StoreSettings, Store
 from ead import Ead
 
 from iiif import IIIFManifest
-from lib import *
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from website import Website
+
 env = Environment(
     extensions=['jinja_markdown.MarkdownExtension'],
     loader=FileSystemLoader(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
@@ -25,16 +33,32 @@ desc = make_archive()
 st.info("""Publishing this data will create a website containing the metadata for this
            collection and a browser for any images.\n\nTypically the site will take **1-5 minutes** to become live.
             """)
-site_suffix = get_random_string(5)
-if SITE_SUFFIX in st.session_state:
-    site_suffix = st.session_state[SITE_SUFFIX]
-else:
-    st.session_state[SITE_SUFFIX] = site_suffix
 
 if st.button("Publish Website"):
-    name = desc.slug() or site_suffix
-    site_id = create_site(name, site_suffix)
-    url = f"https://{site_id}"
+    update_id = st.session_state.get(SITE_ID)
+    if update_id == "":
+        update_id = None
+
+    name = desc.slug()
+    settings = StoreSettings(st.secrets.s3_credentials.bucket,
+                             st.secrets.s3_credentials.region,
+                             st.secrets.s3_credentials.prefix,
+                             st.secrets.s3_credentials.access_key,
+                             st.secrets.s3_credentials.secret_key)
+    iiif_settings = IIIFSettings(st.secrets.iiif.server_url, st.secrets.iiif.image_format)
+
+    maker = Website(settings)
+    site_data = maker.get_or_create_site(name, update_id)
+    st.session_state[SITE_ID] = site_data.id
+    domain = site_data.domain
+
+    with st.expander("View Distribution Info"):
+        st.json(site_data.__dict__)
+
+    st.write(f"""Save these values for editing this site:""")
+    st.write(f"   Site ID:     `{site_data.id}`")
+
+    url = f"https://{domain}"
     st.markdown(f"Waiting for site to be available at: [{url}]({url})")
 
     st.write("Generating EAD...")
@@ -44,15 +68,19 @@ if st.button("Publish Website"):
     manifest = IIIFManifest(
         baseurl=url,
         name=name,
-        service_url=st.secrets.iiif.server_url,
-        image_format=st.secrets.iiif.image_format,
-        prefix=st.secrets.s3_credentials.prefix).to_json(desc)
+        service_url=iiif_settings.server_url,
+        image_format=iiif_settings.image_format,
+        prefix=settings.prefix).to_json(desc)
 
     st.write("Generating site...")
     html = env.get_template("index.html.j2").render(name=name, data=desc)
 
     st.write("Uploading data...")
-    upload(name, site_suffix, html, xml, manifest)
+    store = Store(settings, iiif_settings)
+    store.upload(name, site_data.origin_id, html, xml, manifest, {
+        "foo":"bar",
+        "bar": "baz"
+    })
     st.markdown("### Done!")
     st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 

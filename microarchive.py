@@ -1,15 +1,17 @@
 """A MicroArchive entity"""
 import os.path
 from collections import OrderedDict
+from dataclasses import dataclass, field
 from datetime import date
-from typing import NamedTuple, List, Union, Callable
+from typing import List, Union, Callable
 from typing import Optional
 
 import langcodes
 from slugify import slugify
 
 
-class Identity(NamedTuple):
+@dataclass
+class Identity:
     # Section 1: identification
     title: str = ""
     datedesc: Optional[date] = None
@@ -21,11 +23,12 @@ class Identity(NamedTuple):
                self.extent.strip() != ""
 
 
-class Description(NamedTuple):
+@dataclass
+class Description:
     # Section 2: description
     biog: str = ""
     scope: str = ""
-    lang: List[str] = []
+    lang: List[str] = field(default_factory=list)
 
     def languages(self):
         return [langcodes.get(code).display_name() for code in self.lang]
@@ -35,7 +38,8 @@ class Description(NamedTuple):
                self.scope.strip() != ""
 
 
-class Contact(NamedTuple):
+@dataclass
+class Contact:
     # Section 3: context
     holder: str = ""
     street: str = ""
@@ -58,7 +62,8 @@ class Contact(NamedTuple):
         return self.holder.strip() != ""
 
 
-class Item(NamedTuple):
+@dataclass
+class Item:
     id: str
     identity: Identity
     content: Description
@@ -82,7 +87,8 @@ class Item(NamedTuple):
         return f"<Item '{self.id}' '{self.identity.title}' (children: {len(self.items)})>"
 
 
-class MicroArchive(NamedTuple):
+@dataclass
+class MicroArchive:
     identity: Identity
     description: Description
     contact: Contact
@@ -126,7 +132,7 @@ class MicroArchive(NamedTuple):
             return nest(flat, nested)
 
         ordered = OrderedDict([(it.id, it) for it in reversed(sorted(lookup.values(), key=lambda it: it.id))])
-        return sorted(nest(ordered, OrderedDict()).values())
+        return sorted(nest(ordered, OrderedDict()).values(), key=lambda it: it.id)
 
     def leaf_dirs(self) -> List[Item]:
         """Return a list of directories containing only items (no child directories)"""

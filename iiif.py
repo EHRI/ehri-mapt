@@ -1,4 +1,5 @@
 """Render a MicroArchive as a IIIF manifest"""
+from dataclasses import dataclass
 from typing import Union
 from urllib.parse import quote_plus
 
@@ -7,22 +8,15 @@ from iiif_prezi3 import Manifest, Canvas, CanvasRef, Annotation, AnnotationPage,
 from microarchive import MicroArchive, Item
 
 
-class IIIFManifest():
-    def __init__(self,
-                 baseurl: str,
-                 name: str,
-                 service_url: str,
-                 image_format: str,
-                 prefix: str,
-                 width: int = 768,
-                 height: int = 1024):
-        self.baseurl = baseurl
-        self.name = name
-        self.service_url = service_url
-        self.image_format = image_format
-        self.prefix = prefix
-        self.width = width
-        self.height = height
+@dataclass
+class IIIFManifest:
+    baseurl: str
+    name: str
+    service_url: str
+    image_format: str
+    prefix: str
+    width: int = 768
+    height: int = 1024
 
     def to_json(self, data: MicroArchive) -> str:
 
