@@ -8,7 +8,7 @@ from urllib.parse import quote_plus
 import boto3
 from botocore.exceptions import ClientError
 
-from lib import THUMB_DIR
+THUMB_DIR = ".thumb"
 
 
 @dataclass

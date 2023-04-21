@@ -3,19 +3,20 @@
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 
-from lib import init_page, value_or_default, SITE_SUFFIX, SITE_ID
+from lib import init_page, value_or_default, SITE_ID, load_stored_data
 
 st.set_page_config(page_title="Describe a Collection")
 
 init_page()
 
 
-with st.expander("Edit existing site?", expanded=SITE_SUFFIX in st.session_state):
+with st.expander("Edit existing site?", expanded=SITE_ID in st.session_state):
     st.markdown("#### Add identifier key:")
     st.session_state[SITE_ID] = st.text_input("Site ID",
                                             help="Enter the site ID given when you published this site",
                                             value=value_or_default(SITE_ID, default=''))
-
+    if SITE_ID in st.session_state and st.session_state[SITE_ID]:
+        load_stored_data(st.session_state[SITE_ID])
 
 items = value_or_default('items', [])
 

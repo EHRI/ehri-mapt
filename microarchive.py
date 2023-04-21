@@ -1,14 +1,35 @@
 """A MicroArchive entity"""
 import os.path
+import types
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Dict, Tuple
 from typing import Optional
 
 import langcodes
 from slugify import slugify
 
+
+KEYS = types.SimpleNamespace()
+KEYS.TITLE = "title"
+KEYS.HOLDER = "holder"
+KEYS.DATE_DESC = "datedesc"
+KEYS.LANGS = "langs"
+KEYS.EXTENT = "extent"
+KEYS.STREET = "street"
+KEYS.POSTCODE = "postcode"
+KEYS.BIOG_HIST = "bioghist"
+KEYS.SCOPE = "scope"
+KEYS.ITEMS = "items"
+
+ALL_KEYS = list(KEYS.__dict__.values())
+ALL_ITEM_KEYS = [KEYS.TITLE, KEYS.SCOPE]
+
+
+def item_key(ident: str, key: str):
+    """Get a key for an item-scoped value in the flat data dictionary"""
+    return f"{KEYS.ITEMS}.{ident}.{key}"
 
 @dataclass
 class Identity:
@@ -171,5 +192,48 @@ class MicroArchive:
         for item in self.hierarchical_items():
             print_items(item, 0)
 
+    @classmethod
+    def from_data(cls, data: Dict, items: List[Tuple[str, str, str]]) -> 'MicroArchive':
+        """Make a micro-archive from a flat dictionary and a list of items"""
+        return cls(
+            identity=Identity(
+                title=data.get(KEYS.TITLE, ""),
+                datedesc=data.get(KEYS.DATE_DESC, date.today()),
+                extent=data.get(KEYS.EXTENT, "")),
+            contact=Contact(
+                holder=data.get(KEYS.HOLDER, ""),
+                street=data.get(KEYS.STREET, ""),
+                postcode=data.get(KEYS.POSTCODE, "")),
+            description=Description(biog=data.get(KEYS.BIOG_HIST, ""),
+                                    scope=data.get(KEYS.SCOPE, ""),
+                                    lang=data.get(KEYS.LANGS, [])),
+            items=[Item(
+                ident,
+                Identity(data.get(item_key(ident, KEYS.TITLE), "")),
+                Description(scope=data.get(item_key(ident, KEYS.SCOPE), "")), web_url, thumb_url, [])
+                for ident, web_url, thumb_url in items]
+        )
+
+    def to_data(self) -> Dict:
+        """Turn a micro-archive into a flat dictionary, containing only
+        populated values"""
+        item_data = {}
+        for item in self.items:
+            item_data[item_key(item.id, KEYS.TITLE)] = item.identity.title
+            item_data[item_key(item.id, KEYS.SCOPE)] = item.content.scope
+
+        data = item_data | {
+            KEYS.TITLE: self.identity.title,
+            KEYS.DATE_DESC: self.identity.datedesc.isoformat(),
+            KEYS.EXTENT: self.identity.extent,
+            KEYS.HOLDER: self.contact.holder,
+            KEYS.STREET: self.contact.street,
+            KEYS.POSTCODE: self.contact.postcode,
+            KEYS.BIOG_HIST: self.description.biog,
+            KEYS.SCOPE: self.description.scope,
+            KEYS.LANGS: self.description.lang,
+        }
+        # Remove empty values
+        return {key: value for key, value in data.items() if value}
 
 

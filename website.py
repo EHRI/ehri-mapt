@@ -1,11 +1,25 @@
-import json
+import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Dict
+from typing import Optional
 
 import boto3
 
-from lib import get_random_string
+from microarchive import MicroArchive
 from store import StoreSettings
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+env = Environment(
+    extensions=['jinja_markdown.MarkdownExtension'],
+    loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
+    autoescape=select_autoescape()
+)
+
+
+def get_random_string(length: int) -> str:
+    import random, string
+    # choose from all lowercase letter
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
 
 
 class DistributionNotFound(Exception):
@@ -20,6 +34,10 @@ class SiteInfo:
     domain: str
     origin_id: str
     status: str
+
+
+def make_html(slug: str, desc: MicroArchive) -> str:
+    return  env.get_template("index.html.j2").render(name=slug, data=desc)
 
 
 class Website:

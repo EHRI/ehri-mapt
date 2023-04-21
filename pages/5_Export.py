@@ -1,25 +1,10 @@
+import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 
-import streamlit as st
-
-import os
-
-from lib import make_archive, init_page, SITE_ID
-
-from store import IIIFSettings, StoreSettings, Store
 from ead import Ead
-
 from iiif import IIIFManifest
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-
-from website import Website
-
-env = Environment(
-    extensions=['jinja_markdown.MarkdownExtension'],
-    loader=FileSystemLoader(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
-    autoescape=select_autoescape()
-)
-
+from lib import make_archive, init_page, SITE_ID, WEB, IIIF_SETTINGS, S3_SETTINGS, STORE
+from website import make_html
 
 st.set_page_config(page_title="Export Information")
 
@@ -40,15 +25,8 @@ if st.button("Publish Website"):
         update_id = None
 
     name = desc.slug()
-    settings = StoreSettings(st.secrets.s3_credentials.bucket,
-                             st.secrets.s3_credentials.region,
-                             st.secrets.s3_credentials.prefix,
-                             st.secrets.s3_credentials.access_key,
-                             st.secrets.s3_credentials.secret_key)
-    iiif_settings = IIIFSettings(st.secrets.iiif.server_url, st.secrets.iiif.image_format)
 
-    maker = Website(settings)
-    site_data = maker.get_or_create_site(name, update_id)
+    site_data = WEB.get_or_create_site(name, update_id)
     st.session_state[SITE_ID] = site_data.id
     domain = site_data.domain
 
@@ -68,19 +46,15 @@ if st.button("Publish Website"):
     manifest = IIIFManifest(
         baseurl=url,
         name=name,
-        service_url=iiif_settings.server_url,
-        image_format=iiif_settings.image_format,
-        prefix=settings.prefix).to_json(desc)
+        service_url=IIIF_SETTINGS.server_url,
+        image_format=IIIF_SETTINGS.image_format,
+        prefix=S3_SETTINGS.prefix).to_json(desc)
 
     st.write("Generating site...")
-    html = env.get_template("index.html.j2").render(name=name, data=desc)
+    html = make_html(name, desc)
 
     st.write("Uploading data...")
-    store = Store(settings, iiif_settings)
-    store.upload(name, site_data.origin_id, html, xml, manifest, {
-        "foo":"bar",
-        "bar": "baz"
-    })
+    STORE.upload(name, site_data.origin_id, html, xml, manifest, desc.to_data())
     st.markdown("### Done!")
     st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 

@@ -2,80 +2,22 @@
 import argparse
 import json
 import os
+import sys
 from datetime import date
-from typing import List, Tuple, Dict
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 from slugify import slugify
 
 from ead import Ead
 from iiif import IIIFManifest
-from microarchive import MicroArchive, Identity, Contact, Description, Item
+from microarchive import MicroArchive, KEYS
 from store import StoreSettings, IIIFSettings, Store
-from website import Website
+from website import Website, SiteInfo, make_html
 
-env = Environment(
-    extensions=['jinja_markdown.MarkdownExtension'],
-    loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
-    autoescape=select_autoescape()
-)
-
-TITLE = "Mike's Test Site"
-HOLDER = "EHRI"
-DATE_DESC = date.today()
-LANGS = ["en", "da", "it", "ja"]
-EXTENT = "231 digital images"
-STREET = "The Strand"
-POSTCODE = "ab12 3cd"
-BIOG_HIST = "Testing"
-SCOPE = "Diplomatic Reports"
-
-ITEM_DATA = {
+DEFAULT_DATA = {
+    KEYS.TITLE: "Default Title",
+    KEYS.HOLDER: "Default Holder",
+    KEYS.DATE_DESC: date.today(),
 }
-
-
-def make_archive(items: List[Tuple[str, str, str]], title: str) -> MicroArchive:
-    def key(ident: str) -> str:
-        return f"{ident}.title"
-
-    def scope(ident: str) -> str:
-        return f"{ident}.scope"
-
-    desc = MicroArchive(
-        identity=Identity(
-            title=title,
-            datedesc=DATE_DESC,
-            extent=EXTENT),
-        contact=Contact(
-            holder=HOLDER,
-            street=STREET,
-            postcode=POSTCODE),
-        description=Description(biog=BIOG_HIST,
-                                scope=SCOPE,
-                                lang=LANGS),
-        items=[Item(
-            ident,
-            Identity(ITEM_DATA.get(key(ident), "")),
-            Description(scope=ITEM_DATA.get(scope(ident), "")), url, thumb_url, [])
-            for ident, url, thumb_url in items]
-    )
-
-    return desc
-
-
-def encode_meta() -> Dict:
-    return dict(
-        title=TITLE,
-        datedesc=DATE_DESC,
-        extent=EXTENT,
-        holder=HOLDER,
-        street=STREET,
-        postcode=POSTCODE,
-        biog=BIOG_HIST,
-        scope=SCOPE,
-        lang=LANGS,
-        items={}
-    )
 
 
 if __name__ == "__main__":
@@ -101,13 +43,19 @@ if __name__ == "__main__":
                         help='the IIIF image extension')
     parser.add_argument('--key', type=str, nargs='?', default=None,
                         help='the site key, for updating an existing site')
-    parser.add_argument('--title', type=str, required=False, default=TITLE, dest="title",
-                        help='the site title')
+    parser.add_argument('--wait', action="store_true", default=False,
+                        help='wait for the site to become available')
+    parser.add_argument('--get-info', action="store_true", default=False,
+                        help='get info about the given key and exit')
+    parser.add_argument('--title', type=str, required=False, dest="title",
+                        help='set the site title')
+    parser.add_argument('--data-from-file', type=str, dest="data_file",
+                        help='set data from supplied JSON file')
     args = parser.parse_args()
 
     slug = slugify(args.title)
 
-    print("Loading data...")
+    print("Loading data...", file=sys.stderr)
     store_settings = StoreSettings(
         prefix=args.prefix,
         bucket=args.bucket,
@@ -123,26 +71,46 @@ if __name__ == "__main__":
     store = Store(store_settings, iiif_settings)
     files = store.load_files()
 
-    print("Creating document model...")
-    desc = make_archive(files, title=args.title)
+    # Default values
+    raw_data = DEFAULT_DATA.copy()
+
+    if args.data_file:
+        with open(args.data_file, 'r') as f:
+            from_file = json.load(f)
+            for k, v in from_file.items():
+                raw_data[k] = v
 
     site_maker = Website(store_settings)
     if args.key:
         existing_data = site_maker.get_site(args.key)
         meta = store.get_meta(slug, existing_data.origin_id)
-        print(f"Meta: {meta}")
+        if args.get_info:
+            json.dump(meta, fp=sys.stdout, indent=2, default=str)
+            sys.exit(1)
+        for k, v in meta.items():
+            raw_data[k] = v
 
+        print(f"Meta: {meta}", file=sys.stderr)
+
+    # Now update the data from command args
+    if args.title:
+        raw_data[KEYS.TITLE] = args.title
+
+    print("Creating document model...", file=sys.stderr)
+    desc = MicroArchive.from_data(raw_data, files)
+
+    print("Creating site...", file=sys.stderr)
     site_data = site_maker.get_or_create_site(slug, args.key)
-    print(json.dumps(site_data, indent=2, default=str))
+    print(json.dumps(site_data, indent=2, default=str), file=sys.stderr)
 
     # Now upload some data...
     url = f"https://{site_data.domain}"
-    print(f"Waiting for site to be available at: {url}")
+    print(f"Waiting for site to be available at: {url}...", file=sys.stderr)
 
-    print("Generating EAD...")
+    print("Generating EAD...", file=sys.stderr)
     xml = Ead().to_xml(desc)
 
-    print("Generating IIIF manifest...")
+    print("Generating IIIF manifest...", file=sys.stderr)
     manifest = IIIFManifest(
         baseurl=url,
         name=slug,
@@ -150,10 +118,28 @@ if __name__ == "__main__":
         image_format=iiif_settings.image_format,
         prefix=store_settings.prefix).to_json(desc)
 
-    print("Generating site...")
-    html = env.get_template("index.html.j2").render(name=slug, data=desc)
+    print("Generating site...", file=sys.stderr)
+    html = make_html(slug, desc)
 
-    print(f"Uploading data to origin path: {site_data.origin_id}...")
-    store.upload(slug, site_data.origin_id, html, xml, manifest, encode_meta())
+    print(f"Uploading data to origin path: {site_data.origin_id}...", file=sys.stderr)
+    store.upload(slug, site_data.origin_id, html, xml, manifest, desc.to_data())
 
-    print(f"Key: {site_data.id}")
+    print(f"Key: {site_data.id}", file=sys.stderr)
+
+    if args.wait:
+        import polling2
+
+        def check(data: SiteInfo) -> bool:
+            if data.status != 'Deployed':
+                print(f"Waiting... {data}" , file=sys.stderr)
+                return False
+            return True
+
+
+        polling2.poll(
+            lambda: site_maker.get_site(site_data.id),
+            check_success=check,
+            step=5,
+            timeout=5*60
+        )
+    print("Done", file=sys.stderr)
