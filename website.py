@@ -35,6 +35,9 @@ class SiteInfo:
     origin_id: str
     status: str
 
+    def url(self):
+        return f"https://{self.domain}"
+
 
 def make_html(slug: str, desc: MicroArchive) -> str:
     return  env.get_template("index.html.j2").render(name=slug, data=desc)
@@ -73,8 +76,6 @@ class Website:
         """Create a new site with the given name as the origin id"""
         bucket = self.settings.bucket
         region = self.settings.region
-        file_prefix:str = self.settings.prefix
-        file_prefix_no_slash = file_prefix[:-1] if file_prefix.endswith("/") else file_prefix
 
         # this is simply a reference used within the distribution and could be random,
         # but here we associate it with the given name.
@@ -83,8 +84,7 @@ class Website:
         # the suffix for the uploaded material, on top of the
         # suffix for the input files
         site_suffix = get_random_string(5)
-        suffix = f"_webdata_{site_suffix}/"
-        key_prefix = file_prefix_no_slash + suffix
+        key_prefix = f"webdata_{site_suffix}/"
 
         # s3.create_origin_access_policy()
         # ref is simply a random string to ensure request cannot be replayed

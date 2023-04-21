@@ -15,7 +15,6 @@ THUMB_DIR = ".thumb"
 class StoreSettings:
     bucket: str
     region: str
-    prefix: str
     access_key: str
     secret_key: str
 
@@ -23,7 +22,6 @@ class StoreSettings:
 @dataclass
 class IIIFSettings:
     server_url: str
-    image_format: str
 
 
 @dataclass
@@ -39,10 +37,13 @@ class Store:
                         aws_access_key_id=self.settings.access_key,
                         aws_secret_access_key=self.settings.secret_key)
 
-    def load_files(self) -> List[Tuple[str, str, str]]:
+    def load_files(self, prefix: Optional[str] = None) -> List[Tuple[str, str, str]]:
+        if not prefix:
+            return []
+
         r = self.client.list_objects_v2(
             Bucket=self.settings.bucket,
-            Prefix=self.settings.prefix)
+            Prefix=prefix)
         file_meta = [meta for meta in r["Contents"] if not meta["Key"].endswith("/")]
         items = []
         for i, meta in enumerate(file_meta):
@@ -51,7 +52,7 @@ class Store:
                 continue
 
             path_no_ext = os.path.splitext(key)[0]
-            item_id = path_no_ext[len(self.settings.prefix):]
+            item_id = path_no_ext[len(prefix):]
             url = self.iiif_settings.server_url + quote_plus(key) + "/full/max/0/default.jpg"
             thumb_url = self.iiif_settings.server_url + quote_plus(key) + "/full/!75,100/0/default.jpg"
             items.append((item_id, url, thumb_url))

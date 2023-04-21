@@ -4,7 +4,7 @@ import inflect
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 
-from lib import value_or_default, init_page
+from lib import value_or_default, init_page, load_files, PREFIX
 from microarchive import KEYS
 
 p = inflect.engine()
@@ -13,7 +13,7 @@ st.set_page_config(page_title="Basic Identifying Info")
 
 init_page()
 
-items = value_or_default("items", [])
+items = load_files(st.session_state.get(PREFIX))
 
 st.write("## Identifying information")
 

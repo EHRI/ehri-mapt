@@ -3,7 +3,7 @@ from streamlit_extras.switch_page_button import switch_page
 
 from ead import Ead
 from iiif import IIIFManifest
-from lib import make_archive, init_page, SITE_ID, WEB, IIIF_SETTINGS, S3_SETTINGS, STORE
+from lib import make_archive, init_page, SITE_ID, PREFIX, WEB, IIIF_SETTINGS, S3_SETTINGS, STORE, MODE, FORMAT
 from website import make_html
 
 st.set_page_config(page_title="Export Information")
@@ -19,7 +19,8 @@ st.info("""Publishing this data will create a website containing the metadata fo
            collection and a browser for any images.\n\nTypically the site will take **1-5 minutes** to become live.
             """)
 
-if st.button("Publish Website"):
+if st.button("Publish Website", disabled=PREFIX not in st.session_state):
+    prefix = st.session_state.get(PREFIX)
     update_id = st.session_state.get(SITE_ID)
     if update_id == "":
         update_id = None
@@ -28,13 +29,11 @@ if st.button("Publish Website"):
 
     site_data = WEB.get_or_create_site(name, update_id)
     st.session_state[SITE_ID] = site_data.id
+    st.session_state[MODE] = "edit"
     domain = site_data.domain
 
     with st.expander("View Distribution Info"):
         st.json(site_data.__dict__)
-
-    st.write(f"""Save these values for editing this site:""")
-    st.write(f"   Site ID:     `{site_data.id}`")
 
     url = f"https://{domain}"
     st.markdown(f"Waiting for site to be available at: [{url}]({url})")
@@ -47,15 +46,21 @@ if st.button("Publish Website"):
         baseurl=url,
         name=name,
         service_url=IIIF_SETTINGS.server_url,
-        image_format=IIIF_SETTINGS.image_format,
-        prefix=S3_SETTINGS.prefix).to_json(desc)
+        image_format=st.session_state.get(FORMAT),
+        prefix=prefix).to_json(desc)
 
     st.write("Generating site...")
     html = make_html(name, desc)
 
     st.write("Uploading data...")
-    STORE.upload(name, site_data.origin_id, html, xml, manifest, desc.to_data())
+    state = desc.to_data() | {
+        PREFIX: st.session_state.get(PREFIX)
+    }
+    STORE.upload(name, site_data.origin_id, html, xml, manifest, state)
     st.markdown("### Done!")
+    st.markdown(f"# Site ID `{site_data.id}`")
+    st.write(f"""Save this ID for editing this site:""")
+
     st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 
 

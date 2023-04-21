@@ -9,6 +9,7 @@ from slugify import slugify
 
 from ead import Ead
 from iiif import IIIFManifest
+from lib import PREFIX
 from microarchive import MicroArchive, KEYS
 from store import StoreSettings, IIIFSettings, Store
 from website import Website, SiteInfo, make_html
@@ -27,8 +28,8 @@ if __name__ == "__main__":
         description='Create a basic website',
         epilog='For testing purposes only')
 
-    parser.add_argument('--store-prefix', dest="prefix", type=str, nargs='?', default=os.environ.get("S3_PREFIX"),
-                        help='the store prefix for the input files')
+    parser.add_argument('--prefix', dest="prefix", type=str,
+                        help='the prefix for the input files')
     parser.add_argument('--store-bucket', dest="bucket", type=str, nargs='?', default=os.environ.get("S3_BUCKET"),
                         help='the storage bucket')
     parser.add_argument('--store-region', dest="region", type=str, nargs='?', default=os.environ.get("S3_REGION"),
@@ -57,7 +58,6 @@ if __name__ == "__main__":
 
     print("Loading data...", file=sys.stderr)
     store_settings = StoreSettings(
-        prefix=args.prefix,
         bucket=args.bucket,
         region=args.region,
         access_key=args.access_key,
@@ -65,11 +65,7 @@ if __name__ == "__main__":
     )
     iiif_settings = IIIFSettings(
         server_url=args.iiif_url,
-        image_format=args.iiif_ext
     )
-
-    store = Store(store_settings, iiif_settings)
-    files = store.load_files()
 
     # Default values
     raw_data = DEFAULT_DATA.copy()
@@ -80,6 +76,7 @@ if __name__ == "__main__":
             for k, v in from_file.items():
                 raw_data[k] = v
 
+    store = Store(store_settings, iiif_settings)
     site_maker = Website(store_settings)
     if args.key:
         existing_data = site_maker.get_site(args.key)
@@ -88,9 +85,19 @@ if __name__ == "__main__":
             json.dump(meta, fp=sys.stdout, indent=2, default=str)
             sys.exit(1)
         for k, v in meta.items():
-            raw_data[k] = v
+            if k == KEYS.DATE_DESC:
+                raw_data[k] = date.fromisoformat(v)
+            else:
+                raw_data[k] = v
+        if not args.prefix and PREFIX in meta:
+            args.prefix = meta[PREFIX]
+        elif not args.prefix and os.environ.get("S3_PREFIX"):
+            args.prefix = os.environ.get("S3_PREFIX")
 
         print(f"Meta: {meta}", file=sys.stderr)
+
+    # Load the files...
+    files = store.load_files(args.prefix)
 
     # Now update the data from command args
     if args.title:
@@ -115,14 +122,15 @@ if __name__ == "__main__":
         baseurl=url,
         name=slug,
         service_url=iiif_settings.server_url,
-        image_format=iiif_settings.image_format,
-        prefix=store_settings.prefix).to_json(desc)
+        image_format=args.iiif_ext,
+        prefix=args.prefix).to_json(desc)
 
     print("Generating site...", file=sys.stderr)
     html = make_html(slug, desc)
 
     print(f"Uploading data to origin path: {site_data.origin_id}...", file=sys.stderr)
-    store.upload(slug, site_data.origin_id, html, xml, manifest, desc.to_data())
+    state = desc.to_data() | {PREFIX: args.prefix}
+    store.upload(slug, site_data.origin_id, html, xml, manifest, state)
 
     print(f"Key: {site_data.id}", file=sys.stderr)
 
