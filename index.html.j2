@@ -45,10 +45,8 @@
             grid-template-columns: 10% 1fr 10%;
             grid-gap: 1rem;
 
-            background-color: #3b3b34;
-            color: #fff;
-
-
+            {#background-color: #3b3b34;#}
+            {#color: #fff;#}
         }
         .header-content {
             grid-area: content;
@@ -106,13 +104,17 @@
             grid-gap: 1rem;
 
             padding: 1rem 0;
-            font-size: 0.9rem;
-            color: #333;
-            background-color: #dad7be;
+            font-size: 0.8rem;
+            color: #dad7be;
+            background-color: #3b3b34;
+            font-family: Barlow, sans-serif;
         }
         .footer-content {
             grid-area: content;
-
+            display: flex;
+        }
+        .footer-content .site-key {
+            margin-left: auto;
         }
         #viewer {
             position: relative;
@@ -196,7 +198,12 @@
 
     <footer id="footer">
         <div class="footer-content">
-            &copy; EHRI Project 2023
+            <div class="copyright">
+                &copy; EHRI Project 2023
+            </div>
+            <div class="site-key">
+                {{ key }}
+            </div>
         </div>
     </footer>
 

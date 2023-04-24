@@ -6,25 +6,22 @@ from iiif import IIIFManifest
 from lib import make_archive, init_page, SITE_ID, PREFIX, WEB, IIIF_SETTINGS, S3_SETTINGS, STORE, MODE, FORMAT
 from website import make_html
 
-st.set_page_config(page_title="Export Information")
+st.set_page_config(page_title="Publish")
 
 init_page()
 
-st.write("## Export Information")
+st.write("## Publish Data")
 
 # Build the representation...
 desc = make_archive()
 
 st.info("""Publishing this data will create a website containing the metadata for this
-           collection and a browser for any images.\n\nTypically the site will take **1-5 minutes** to become live.
+           collection and a browser for any images.\n\nTypically a new site will take **1-5 minutes** to become live.
             """)
 
 if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     prefix = st.session_state.get(PREFIX)
-    update_id = st.session_state.get(SITE_ID)
-    if update_id == "":
-        update_id = None
-
+    update_id = st.session_state.get(SITE_ID) or None
     name = desc.slug()
 
     site_data = WEB.get_or_create_site(name, update_id)
@@ -36,7 +33,10 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
         st.json(site_data.__dict__)
 
     url = f"https://{domain}"
-    st.markdown(f"Waiting for site to be available at: [{url}]({url})")
+    if update_id:
+        st.markdown(f"Site is available at: [{url}]({url})")
+    else:
+        st.markdown(f"Site will be available at [{url}]({url})")
 
     st.write("Generating EAD...")
     xml = Ead().to_xml(desc)
@@ -49,8 +49,8 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
         image_format=st.session_state.get(FORMAT),
         prefix=prefix).to_json(desc)
 
-    st.write("Generating site...")
-    html = make_html(name, desc)
+    st.write("Generating website...")
+    html = make_html(name, desc, site_data.id)
 
     st.write("Uploading data...")
     state = desc.to_data() | {
@@ -58,10 +58,11 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     }
     STORE.upload(name, site_data.origin_id, html, xml, manifest, state)
     st.markdown("### Done!")
-    st.markdown(f"# Site ID `{site_data.id}`")
     st.write(f"""Save this ID for editing this site:""")
+    st.markdown(f"### `{site_data.id}`")
 
-    st.write(f"Your site should be available after a few minutes at [{url}]({url})")
+    if not update_id:
+        st.write(f"Your site should be available after a few minutes at [{url}]({url})")
 
 
 st.markdown("---")

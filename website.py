@@ -39,8 +39,8 @@ class SiteInfo:
         return f"https://{self.domain}"
 
 
-def make_html(slug: str, desc: MicroArchive) -> str:
-    return  env.get_template("index.html.j2").render(name=slug, data=desc)
+def make_html(slug: str, desc: MicroArchive, site_key: str) -> str:
+    return  env.get_template("index.html.j2").render(name=slug, key=site_key, data=desc)
 
 
 class Website:

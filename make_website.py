@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     # Now upload some data...
     url = f"https://{site_data.domain}"
-    print(f"Waiting for site to be available at: {url}...", file=sys.stderr)
+    print(f"Site will be available at: {url}...", file=sys.stderr)
 
     print("Generating EAD...", file=sys.stderr)
     xml = Ead().to_xml(desc)
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         prefix=args.prefix).to_json(desc)
 
     print("Generating site...", file=sys.stderr)
-    html = make_html(slug, desc)
+    html = make_html(slug, desc, site_data.id)
 
     print(f"Uploading data to origin path: {site_data.origin_id}...", file=sys.stderr)
     state = desc.to_data() | {PREFIX: args.prefix}
