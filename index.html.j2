@@ -7,6 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
+        :root {
+            --wine-red: #771646;
+            --black: #46463D;
+            --beige: #D5D2B8;
+        }
         body {
             font-size: 17px;
             line-height: 29px;
@@ -30,7 +35,7 @@
         }
 
         a {
-            color: #84024d;
+            color: var(--wine-red);
             text-decoration: none;
         }
 
@@ -72,6 +77,9 @@
                 grid-gap: 1rem 0;
                 overflow: inherit;
             }
+            header {
+                grid-gap: 0;
+            }
             #metadata {
                 padding-right: 0;
             }
@@ -105,8 +113,8 @@
 
             padding: 1rem 0;
             font-size: 0.8rem;
-            color: #dad7be;
-            background-color: #3b3b34;
+            color: var(--beige);
+            background-color: var(--black);
             font-family: Barlow, sans-serif;
         }
         .footer-content {
@@ -144,7 +152,7 @@
 <body>
     <header>
         <div class="header-content">
-            <h1>{{ data.identity.title }}</h1>
+            <h1><a href="">{{ data.identity.title }}</a></h1>
         </div>
     </header>
 
