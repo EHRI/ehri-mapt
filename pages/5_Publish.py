@@ -28,6 +28,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     st.session_state[MODE] = "edit"
     domain = site_data.domain
 
+    st.markdown("---")
     with st.expander("View Distribution Info"):
         st.json(site_data.__dict__)
 

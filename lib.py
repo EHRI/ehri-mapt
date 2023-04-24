@@ -73,8 +73,8 @@ def init_page(title: str = "Describe a Collection"):
         simple websites based on scanned image datasets. The datasets shown here are
         for demonstration purposes only and need to be set up outside of this tool.""")
 
-        with st.expander("Debug Info"):
-            st.json(st.session_state)
+        #with st.expander("Debug Info"):
+        #    st.json(st.session_state)
 
     st.write("# Micro Archive Publication Tool")
 
