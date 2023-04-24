@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from dataclasses import dataclass
 from typing import Tuple, List, Optional, Dict
@@ -9,6 +10,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 THUMB_DIR = ".thumb"
+EXT_PATTERN = re.compile('.*\\.(jpe?g|tiff?|png|gif|raw)$', re.IGNORECASE)
 
 
 @dataclass
@@ -33,9 +35,9 @@ class Store:
 
     def aws_client(self, service: str):
         return boto3.client(service,
-                        region_name=self.settings.region,
-                        aws_access_key_id=self.settings.access_key,
-                        aws_secret_access_key=self.settings.secret_key)
+                            region_name=self.settings.region,
+                            aws_access_key_id=self.settings.access_key,
+                            aws_secret_access_key=self.settings.secret_key)
 
     def load_files(self, prefix: Optional[str] = None) -> List[Tuple[str, str, str]]:
         if not prefix:
@@ -49,6 +51,8 @@ class Store:
         for i, meta in enumerate(file_meta):
             key: str = meta["Key"]
             if THUMB_DIR in key:
+                continue
+            if not EXT_PATTERN.match(key):
                 continue
 
             path_no_ext = os.path.splitext(key)[0]
@@ -88,7 +92,7 @@ class Store:
         # Upload a manifest privately
         self.client.put_object(
             Bucket=bucket,
-            Key = os.path.join(origin_no_slash, f".meta.json"),
+            Key=os.path.join(origin_no_slash, f".meta.json"),
             ContentType="application/json",
             Body=json.dumps(meta, indent=2, default=str).encode('utf-8')
         )
