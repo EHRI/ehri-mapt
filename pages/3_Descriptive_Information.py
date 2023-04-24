@@ -5,9 +5,8 @@ from streamlit_extras.switch_page_button import switch_page
 from lib import init_page, value_or_default
 from microarchive import KEYS
 
-st.set_page_config(page_title="Enter Descriptive Info")
 
-init_page()
+init_page("Descriptive Info")
 
 st.write("## Descriptive information")
 

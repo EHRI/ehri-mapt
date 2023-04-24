@@ -6,9 +6,8 @@ from iiif import IIIFManifest
 from lib import make_archive, init_page, SITE_ID, PREFIX, WEB, IIIF_SETTINGS, S3_SETTINGS, STORE, MODE, FORMAT
 from website import make_html
 
-st.set_page_config(page_title="Publish")
 
-init_page()
+init_page("Publish")
 
 st.write("## Publish Data")
 

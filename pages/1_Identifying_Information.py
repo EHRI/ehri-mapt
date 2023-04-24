@@ -9,9 +9,7 @@ from microarchive import KEYS
 
 p = inflect.engine()
 
-st.set_page_config(page_title="Basic Identifying Info")
-
-init_page()
+init_page("Basic Identifying Info")
 
 items = load_files(st.session_state.get(PREFIX))
 
@@ -20,17 +18,18 @@ st.write("## Identifying information")
 st.write("Information to identify the collection")
 
 st.session_state[KEYS.TITLE] = st.text_input("Collection Name",
-              help="Enter a descriptive name for the full collection",
-              value=value_or_default(KEYS.TITLE))
+                                             help="Enter a descriptive name for the full collection",
+                                             value=value_or_default(KEYS.TITLE))
 
 st.session_state[KEYS.DATE_DESC] = st.date_input("Date of description",
-              help="Enter the date this description was made",
-              value=value_or_default(KEYS.DATE_DESC, date.today()))
+                                                 help="Enter the date this description was made",
+                                                 value=value_or_default(KEYS.DATE_DESC, date.today()))
 
 st.session_state[KEYS.EXTENT] = st.text_area("Type of material",
-             help="Enter a general description of the format of this material, for example '127 "
-                  "photographs'",
-             value=value_or_default(KEYS.EXTENT, f"{len(items)} {p.plural('scanned image', len(items))}"))
+                                             help="Enter a general description of the format of this material, for example '127 photographs'",
+                                             value=value_or_default(KEYS.EXTENT,
+                                                                    f"{len(items)} "
+                                                                    f"{p.plural('scanned image', len(items))}" if items else ""))
 
 st.markdown("---")
 col1, col2 = st.columns(2)

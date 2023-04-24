@@ -54,18 +54,19 @@ def value_or_default(key, default: Any = ""):
     return st.session_state[key] if key in st.session_state else default
 
 
-@st.experimental_memo(ttl=EXPIRATION)
+@st.cache_data(ttl=EXPIRATION)
 def load_files(prefix: Optional[str]):
     return STORE.load_files(prefix)
 
 
-def init_page():
+def init_page(title: str = "Describe a Collection"):
+    st.set_page_config(page_title=title)
     if KEYS.TITLE not in st.session_state:
         st.session_state[KEYS.TITLE] = "Default Collection Name"
     if KEYS.SCOPE not in st.session_state:
-        st.session_state[KEYS.SCOPE] = "[Default collection description.]"
+        st.session_state[KEYS.SCOPE] = ""
     if MODE not in st.session_state:
-        st.session_state[MODE] = "create"
+        st.session_state[MODE] = MODE_CREATE
 
     with st.sidebar:
         st.warning("""This tool is a proof of concept for describing and publishing

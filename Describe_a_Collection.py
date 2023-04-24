@@ -6,8 +6,6 @@ from streamlit_extras.switch_page_button import switch_page
 from lib import init_page, value_or_default, SITE_ID, load_stored_data, PREFIX, load_files, MODE, MODE_CREATE, \
     MODE_EDIT, FORMAT
 
-st.set_page_config(page_title="Describe a Collection")
-
 init_page()
 
 st.session_state[MODE] = st.selectbox("What would you like to do?", (MODE_CREATE, MODE_EDIT),
