@@ -44,4 +44,4 @@ col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Descriptive Information")
 if col2.button("Next"):
-    switch_page("Publish")
+    switch_page("Additional Information")

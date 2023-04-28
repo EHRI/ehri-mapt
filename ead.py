@@ -67,6 +67,16 @@ class Ead():
             scopecontent = ET.SubElement(archdesc, 'scopecontent')
             scopecontentp = ET.SubElement(scopecontent, 'p')
             scopecontentp.text = data.description.scope
+        if data.control.datedesc or data.control.notes:
+            processinfo = ET.SubElement(archdesc, 'processinfo')
+            if data.control.notes:
+                processinfop = ET.SubElement(processinfo, 'p')
+                processinfop.text = data.control.notes
+            if data.control.datedesc:
+                processinfop2 = ET.SubElement(processinfo, 'p')
+                processinfop2.text = "Collection described on "
+                date_ = ET.SubElement(processinfop2, 'date', {'normal': data.control.datedesc.strftime('%Y%m%d')})
+                date_.text = str(data.control.datedesc)
 
         if data.items:
             dsc = ET.SubElement(archdesc, 'dsc')
@@ -88,17 +98,5 @@ class Ead():
 
                 make_child(item, dsc, 1)
 
-        _pretty_print(root, pad='    ')
+        ET.indent(root, space="  ", level=0)
         return ET.tostring(root, encoding="unicode")
-
-
-def _pretty_print(current, parent=None, index=-1, depth=0, pad='\t'):
-    for i, node in enumerate(current):
-        _pretty_print(node, current, i, depth + 1, pad)
-    if parent is not None:
-        if index == 0:
-            parent.text = '\n' + (pad * depth)
-        else:
-            parent[index - 1].tail = '\n' + (pad * depth)
-        if index == len(parent) - 1:
-            current.tail = '\n' + (pad * (depth - 1))

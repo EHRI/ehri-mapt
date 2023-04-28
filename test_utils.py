@@ -2,7 +2,7 @@ from typing import Dict, Union
 
 import pytest
 
-from microarchive import MicroArchive, Identity, Description, Contact, Item
+from microarchive import MicroArchive, Identity, Description, Contact, Item, Control
 
 
 @pytest.fixture
@@ -17,6 +17,9 @@ def archive():
         ),
         contact=Contact(
             street="1 Acacia Av."
+        ),
+        control=Control(
+          notes="Test Note"
         ),
         items=[
             Item.make(id="Dir1/Dir1-1/item1", identity=Identity(title="Item1")),

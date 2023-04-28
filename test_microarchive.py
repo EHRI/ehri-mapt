@@ -1,3 +1,4 @@
+from microarchive import Control
 from test_utils import *
 
 @pytest.fixture
@@ -6,6 +7,7 @@ def flat_archive():
         identity=Identity(title="test"),
         description=Description(),
         contact=Contact(),
+        control=Control(),
         items=[
             Item.make(id="item1", identity=Identity(title="Item1")),
             Item.make(id="item2", identity=Identity(title="Item2")),

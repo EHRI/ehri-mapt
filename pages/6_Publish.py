@@ -29,14 +29,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     domain = site_data.domain
 
     st.markdown("---")
-    with st.expander("View Distribution Info"):
-        st.json(site_data.__dict__)
-
     url = f"https://{domain}"
-    if update_id:
-        st.markdown(f"Site is available at: [{url}]({url})")
-    else:
-        st.markdown(f"Site will be available at [{url}]({url})")
 
     st.write("Generating EAD...")
     xml = Ead().to_xml(desc)
@@ -54,20 +47,24 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
 
     st.write("Uploading data...")
     state = desc.to_data() | {
-        PREFIX: st.session_state.get(PREFIX)
+        PREFIX: st.session_state.get(PREFIX),
+        FORMAT: st.session_state.get(FORMAT)
     }
     STORE.upload(name, site_data.origin_id, html, xml, manifest, state)
     st.markdown("### Done!")
     st.write(f"""Save this ID for editing this site:""")
     st.markdown(f"### `{site_data.id}`")
 
-    if not update_id:
-        st.write(f"Your site should be available after a few minutes at [{url}]({url})")
+    if update_id:
+        st.markdown(f"Updated site: [{url}]({url})")
+    else:
+        st.markdown(f"Your site should be available after a few minutes at [{url}]({url})")
+
 
 
 st.markdown("---")
 col1, col2 = st.columns(2)
 if col1.button("Back"):
-    switch_page("Item Information")
+    switch_page("Additional Information")
 
 

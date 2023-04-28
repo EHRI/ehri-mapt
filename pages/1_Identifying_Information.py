@@ -17,16 +17,17 @@ st.write("## Identifying information")
 
 st.write("Information to identify the collection")
 
+
+
 st.session_state[KEYS.TITLE] = st.text_input("Collection Name",
-                                             help="Enter a descriptive name for the full collection",
+                                             help="Enter a descriptive name for the full collection. "
+                                                  "This is equivalent to ISAD(G) 3.1.2: Title",
                                              value=value_or_default(KEYS.TITLE))
 
-st.session_state[KEYS.DATE_DESC] = st.date_input("Date of description",
-                                                 help="Enter the date this description was made",
-                                                 value=value_or_default(KEYS.DATE_DESC, date.today()))
-
 st.session_state[KEYS.EXTENT] = st.text_area("Type of material",
-                                             help="Enter a general description of the format of this material, for example '127 photographs'",
+                                             help="Enter a general description of the format of this material. "
+                                                  "Example '127 photographs'. "
+                                                  "This is equivalent to ISAD(G) 3.1.5: Extent and Medium",
                                              value=value_or_default(KEYS.EXTENT,
                                                                     f"{len(items)} "
                                                                     f"{p.plural('scanned image', len(items))}" if items else ""))

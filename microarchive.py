@@ -22,6 +22,7 @@ KEYS.POSTCODE = "postcode"
 KEYS.BIOG_HIST = "bioghist"
 KEYS.SCOPE = "scope"
 KEYS.ITEMS = "items"
+KEYS.NOTES = "archnotes"
 
 ALL_KEYS = list(KEYS.__dict__.values())
 ALL_ITEM_KEYS = [KEYS.TITLE, KEYS.SCOPE]
@@ -31,16 +32,15 @@ def item_key(ident: str, key: str):
     """Get a key for an item-scoped value in the flat data dictionary"""
     return f"{KEYS.ITEMS}.{ident}.{key}"
 
+
 @dataclass
 class Identity:
     # Section 1: identification
     title: str = ""
-    datedesc: Optional[date] = None
     extent: str = ""
 
     def done(self) -> bool:
         return self.title.strip() != "" and \
-               self.datedesc is not None and \
                self.extent.strip() != ""
 
 
@@ -84,6 +84,12 @@ class Contact:
 
 
 @dataclass
+class Control:
+    notes: str = ""
+    datedesc: Optional[date] = None
+
+
+@dataclass
 class Item:
     id: str
     identity: Identity
@@ -113,6 +119,7 @@ class MicroArchive:
     identity: Identity
     description: Description
     contact: Contact
+    control: Control
     items: List[Item]
 
     def hierarchical_items(self) -> List[Item]:
@@ -198,12 +205,15 @@ class MicroArchive:
         return cls(
             identity=Identity(
                 title=data.get(KEYS.TITLE, ""),
-                datedesc=data.get(KEYS.DATE_DESC, date.today()),
                 extent=data.get(KEYS.EXTENT, "")),
             contact=Contact(
                 holder=data.get(KEYS.HOLDER, ""),
                 street=data.get(KEYS.STREET, ""),
                 postcode=data.get(KEYS.POSTCODE, "")),
+            control=Control(
+                notes=data.get(KEYS.NOTES, ""),
+                datedesc=data.get(KEYS.DATE_DESC, date.today())
+            ),
             description=Description(biog=data.get(KEYS.BIOG_HIST, ""),
                                     scope=data.get(KEYS.SCOPE, ""),
                                     lang=data.get(KEYS.LANGS, [])),
@@ -224,7 +234,6 @@ class MicroArchive:
 
         data = item_data | {
             KEYS.TITLE: self.identity.title,
-            KEYS.DATE_DESC: self.identity.datedesc.isoformat(),
             KEYS.EXTENT: self.identity.extent,
             KEYS.HOLDER: self.contact.holder,
             KEYS.STREET: self.contact.street,
@@ -232,6 +241,8 @@ class MicroArchive:
             KEYS.BIOG_HIST: self.description.biog,
             KEYS.SCOPE: self.description.scope,
             KEYS.LANGS: self.description.lang,
+            KEYS.DATE_DESC: self.control.datedesc.isoformat(),
+            KEYS.NOTES: self.control.notes
         }
         # Remove empty values
         return {key: value for key, value in data.items() if value}

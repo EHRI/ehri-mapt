@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import argparse
 import json
 import os
@@ -9,11 +10,12 @@ from slugify import slugify
 
 from ead import Ead
 from iiif import IIIFManifest
-from lib import PREFIX
 from microarchive import MicroArchive, KEYS
 from store import StoreSettings, IIIFSettings, Store
 from website import Website, SiteInfo, make_html
 
+PREFIX = "prefix"
+FORMAT = "format"
 DEFAULT_DATA = {
     KEYS.TITLE: "Default Title",
     KEYS.HOLDER: "Default Holder",
@@ -48,15 +50,14 @@ if __name__ == "__main__":
                         help='wait for the site to become available')
     parser.add_argument('--get-info', action="store_true", default=False,
                         help='get info about the given key and exit')
+    parser.add_argument('--ead', action="store_true", default=False,
+                        help='print the EAD file and exit')
     parser.add_argument('--title', type=str, required=False, dest="title",
                         help='set the site title')
     parser.add_argument('--data-from-file', type=str, dest="data_file",
                         help='set data from supplied JSON file')
     args = parser.parse_args()
 
-    slug = slugify(args.title)
-
-    print("Loading data...", file=sys.stderr)
     store_settings = StoreSettings(
         bucket=args.bucket,
         region=args.region,
@@ -79,8 +80,9 @@ if __name__ == "__main__":
     store = Store(store_settings, iiif_settings)
     site_maker = Website(store_settings)
     if args.key:
+        print("Loading data...", file=sys.stderr)
         existing_data = site_maker.get_site(args.key)
-        meta = store.get_meta(slug, existing_data.origin_id)
+        meta = store.get_meta("???", existing_data.origin_id)
         if args.get_info:
             json.dump(meta, fp=sys.stdout, indent=2, default=str)
             sys.exit(1)
@@ -91,20 +93,33 @@ if __name__ == "__main__":
                 raw_data[k] = v
         if not args.prefix and PREFIX in meta:
             args.prefix = meta[PREFIX]
+        if not args.iiif_ext and FORMAT in meta:
+            args.iiif_ext = meta[FORMAT]
         elif not args.prefix and os.environ.get("S3_PREFIX"):
             args.prefix = os.environ.get("S3_PREFIX")
 
         print(f"Meta: {meta}", file=sys.stderr)
 
-    # Load the files...
-    files = store.load_files(args.prefix)
-
     # Now update the data from command args
     if args.title:
         raw_data[KEYS.TITLE] = args.title
 
+    try:
+        slug = slugify(raw_data[KEYS.TITLE])
+    except KeyError:
+        print("Argument --title [TITLE] required")
+        sys.exit(1)
+
+    # Load the files...
+    files = store.load_files(args.prefix)
+
     print("Creating document model...", file=sys.stderr)
     desc = MicroArchive.from_data(raw_data, files)
+
+    # If we just want to check the XML, print it and bail
+    if args.ead:
+        print(Ead().to_xml(desc))
+        sys.exit()
 
     print("Creating site...", file=sys.stderr)
     site_data = site_maker.get_or_create_site(slug, args.key)
@@ -129,7 +144,7 @@ if __name__ == "__main__":
     html = make_html(slug, desc, site_data.id)
 
     print(f"Uploading data to origin path: {site_data.origin_id}...", file=sys.stderr)
-    state = desc.to_data() | {PREFIX: args.prefix}
+    state = desc.to_data() | {PREFIX: args.prefix, FORMAT: args.iiif_ext}
     store.upload(slug, site_data.origin_id, html, xml, manifest, state)
 
     print(f"Key: {site_data.id}", file=sys.stderr)
