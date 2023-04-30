@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import streamlit as st
+import streamlit.components.v1 as components
 from streamlit_extras.switch_page_button import switch_page
 
 from lib import init_page, value_or_default, SITE_ID, load_stored_data, PREFIX, load_files, MODE, MODE_CREATE, \
@@ -20,7 +21,10 @@ if st.session_state[MODE] == MODE_CREATE:
     dataset = st.selectbox("Select a test dataset:",
                            dataset_options,
                            format_func=lambda s: st.secrets.datasets[s].name if s else "---",
-                           index=selected)
+                           index=selected,
+                           help="These datasets consist of files that have been uploaded to a specific Cloud storage "
+                                "location that this demo tool can access. It is not currently possible to upload "
+                                "additional datasets via this tool.")
     if dataset:
         st.session_state[PREFIX] = dataset
         st.session_state[FORMAT] = st.secrets.datasets[dataset].format
@@ -40,7 +44,8 @@ if PREFIX in st.session_state and st.session_state[PREFIX]:
     items = load_files(st.session_state.get(PREFIX))
     st.markdown(f"### Items found: {len(items)}")
 
-    view = """<div style="display: grid; grid-gap: 1rem; grid-template-columns: 1fr 1fr 1fr 1fr">"""
+    view = """<style>body { font-family: sans-serif; } a { color: #771646} </style>"""
+    view += """<div style="display: grid; grid-gap: 1rem; grid-template-columns: 1fr 1fr 1fr 1fr">"""
     for i, (key, url, thumb_url) in enumerate(items):
         view += "<div>"
         view += f"""<a href="{url}" target="_blank">
@@ -51,9 +56,11 @@ if PREFIX in st.session_state and st.session_state[PREFIX]:
     """
         view += "</div>"
     view += "</div>"
-    st.markdown(view, unsafe_allow_html=True)
+
+    components.html(view, height=400, scrolling=True)
 else:
     st.write("### No dataset selected")
 
+st.markdown('---')
 if st.button("Next: Enter Basic Identifying Information"):
     switch_page("Identifying Information")

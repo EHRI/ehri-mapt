@@ -3,9 +3,8 @@ from streamlit_extras.switch_page_button import switch_page
 
 from ead import Ead
 from iiif import IIIFManifest
-from lib import make_archive, init_page, SITE_ID, PREFIX, WEB, IIIF_SETTINGS, S3_SETTINGS, STORE, MODE, FORMAT
+from lib import make_archive, init_page, SITE_ID, PREFIX, WEB, IIIF_SETTINGS, STORE, MODE, FORMAT
 from website import make_html
-
 
 init_page("Publish")
 
@@ -14,13 +13,27 @@ st.write("## Publish Data")
 # Build the representation...
 desc = make_archive()
 
-st.info("""Publishing this data will create a website containing the metadata for this
-           collection and a browser for any images.\n\nTypically a new site will take **1-5 minutes** to become live.
-            """)
+
+def preparing_site(ident: str):
+    import polling2
+    polling2.poll(
+        lambda: WEB.get_site(ident),
+        check_success=lambda data: data.status == 'Deployed',
+        step=5,
+        timeout=10*60
+    )
+
+update_id = st.session_state.get(SITE_ID) or None
+
+if update_id:
+    st.info(f"Update site with code: {update_id}")
+else:
+    st.info("""Publishing this data will create a website containing the metadata for this
+               collection and a browser for any images.""")
+
 
 if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     prefix = st.session_state.get(PREFIX)
-    update_id = st.session_state.get(SITE_ID) or None
     name = desc.slug()
 
     site_data = WEB.get_or_create_site(name, update_id)
@@ -51,6 +64,12 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
         FORMAT: st.session_state.get(FORMAT)
     }
     STORE.upload(name, site_data.origin_id, html, xml, manifest, state)
+
+    with st.spinner("Preparing site..."):
+        if not update_id:
+            st.info("Typically a new site will take **1-5 minutes** to become live...")
+        preparing_site(site_data.id)
+
     st.markdown("### Done!")
     st.write(f"""Save this ID for editing this site:""")
     st.markdown(f"### `{site_data.id}`")
@@ -58,7 +77,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     if update_id:
         st.markdown(f"Updated site: [{url}]({url})")
     else:
-        st.markdown(f"Your site should be available after a few minutes at [{url}]({url})")
+        st.markdown(f"Your site is available at: [{url}]({url})")
 
 
 

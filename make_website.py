@@ -163,6 +163,6 @@ if __name__ == "__main__":
             lambda: site_maker.get_site(site_data.id),
             check_success=check,
             step=5,
-            timeout=5*60
+            timeout=10*60
         )
     print("Done", file=sys.stderr)
