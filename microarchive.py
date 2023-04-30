@@ -10,7 +10,6 @@ from typing import Optional
 import langcodes
 from slugify import slugify
 
-
 KEYS = types.SimpleNamespace()
 KEYS.TITLE = "title"
 KEYS.HOLDER = "holder"
@@ -136,7 +135,7 @@ class MicroArchive:
                 continue
             parts = path.split('/')
             for i in reversed(range(0, len(parts))):
-                p_parts = parts[0:i+1]
+                p_parts = parts[0:i + 1]
                 p_path = '/'.join(p_parts)
                 p = lookup.get(p_path) if p_path in lookup else Item.make(
                     id=p_path, identity=Identity(title=p_parts[-1]))
@@ -164,6 +163,7 @@ class MicroArchive:
 
     def leaf_dirs(self) -> List[Item]:
         """Return a list of directories containing only items (no child directories)"""
+
         def walk(item: Item, f: Callable):
             for child in item.items:
                 walk(child, f)
@@ -196,6 +196,7 @@ class MicroArchive:
             print(f"{space}{item.id}")
             for i in item.items:
                 print_items(i, indent + 1)
+
         for item in self.hierarchical_items():
             print_items(item, 0)
 
@@ -241,10 +242,8 @@ class MicroArchive:
             KEYS.BIOG_HIST: self.description.biog,
             KEYS.SCOPE: self.description.scope,
             KEYS.LANGS: self.description.lang,
-            KEYS.DATE_DESC: self.control.datedesc.isoformat(),
+            KEYS.DATE_DESC: self.control.datedesc.isoformat() if self.control.datedesc else None,
             KEYS.NOTES: self.control.notes
         }
         # Remove empty values
         return {key: value for key, value in data.items() if value}
-
-

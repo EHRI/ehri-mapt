@@ -62,7 +62,7 @@ class Store:
             items.append((item_id, url, thumb_url))
         return items
 
-    def get_meta(self, name: str, origin: str) -> Optional[Dict]:
+    def get_meta(self, origin: str, name: str = "<unnamed>") -> Optional[Dict]:
         """Fetch the micro-archive manifest from existing storage"""
         import io
         buf = io.BytesIO()

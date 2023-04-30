@@ -82,12 +82,12 @@ if __name__ == "__main__":
     if args.key:
         print("Loading data...", file=sys.stderr)
         existing_data = site_maker.get_site(args.key)
-        meta = store.get_meta("???", existing_data.origin_id)
+        meta = store.get_meta(existing_data.origin_id)
         if args.get_info:
             json.dump(meta, fp=sys.stdout, indent=2, default=str)
             sys.exit(1)
         for k, v in meta.items():
-            if k == KEYS.DATE_DESC:
+            if k == KEYS.DATE_DESC and v:
                 raw_data[k] = date.fromisoformat(v)
             else:
                 raw_data[k] = v

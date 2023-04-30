@@ -27,27 +27,35 @@ IIIF_SETTINGS = IIIFSettings(
     server_url=st.secrets.iiif.server_url,
 )
 
-STORE = Store(S3_SETTINGS, IIIF_SETTINGS)
-WEB = Website(S3_SETTINGS)
+
+@st.cache_resource
+def storage():
+    return Store(S3_SETTINGS, IIIF_SETTINGS)
+
+
+@st.cache_resource
+def web_builder():
+    return Website(S3_SETTINGS)
 
 
 def load_stored_data(site_id: str) -> SiteInfo:
-    site_info = WEB.get_site(site_id)
-    meta = STORE.get_meta("?", site_info.origin_id)
-    for key in ALL_KEYS:
-        if key in meta and meta[key]:
-            if key == KEYS.DATE_DESC:
-                st.session_state[key] = datetime.date.fromisoformat(meta[key])
-            else:
-                st.session_state[key] = meta[key]
-    if PREFIX in meta:
-        st.session_state[PREFIX] = meta[PREFIX]
-        st.session_state[FORMAT] = st.secrets.datasets[meta[PREFIX]].format
-    for ident, _, _ in load_files(st.session_state.get(PREFIX)):
-        for key in ALL_ITEM_KEYS:
-            ikey = item_key(ident, key)
-            if ikey in meta and meta[ikey]:
-                st.session_state[ikey] = meta[ikey]
+    site_info = web_builder().get_site(site_id)
+    meta = storage().get_meta(site_info.origin_id)
+    if meta:
+        for key in ALL_KEYS:
+            if key in meta and meta[key]:
+                if key == KEYS.DATE_DESC:
+                    st.session_state[key] = datetime.date.fromisoformat(meta[key])
+                else:
+                    st.session_state[key] = meta[key]
+        if PREFIX in meta:
+            st.session_state[PREFIX] = meta[PREFIX]
+            st.session_state[FORMAT] = st.secrets.datasets[meta[PREFIX]].format
+        for ident, _, _ in load_files(st.session_state.get(PREFIX)):
+            for key in ALL_ITEM_KEYS:
+                ikey = item_key(ident, key)
+                if ikey in meta and meta[ikey]:
+                    st.session_state[ikey] = meta[ikey]
     return site_info
 
 
@@ -57,7 +65,7 @@ def value_or_default(key, default: Any = ""):
 
 @st.cache_data(ttl=EXPIRATION)
 def load_files(prefix: Optional[str]):
-    return STORE.load_files(prefix)
+    return storage().load_files(prefix)
 
 
 def init_page(title: str = "Describe a Collection"):
@@ -73,9 +81,6 @@ def init_page(title: str = "Describe a Collection"):
         st.warning("""This tool is a proof of concept for describing and publishing
         simple websites based on scanned image datasets. The datasets shown here are
         for demonstration purposes only and need to be set up outside of this tool.""")
-
-        #with st.expander("Debug Info"):
-        #    st.json(st.session_state)
 
     st.write("# Micro Archive Publication Tool")
 
@@ -94,7 +99,7 @@ def make_archive():
                                 lang=value_or_default(KEYS.LANGS, [])),
         control=Control(
             notes=value_or_default(KEYS.NOTES, ""),
-            datedesc=value_or_default(KEYS.DATE_DESC, "")
+            datedesc=value_or_default(KEYS.DATE_DESC, None)
         ),
         items=[Item(
             ident,

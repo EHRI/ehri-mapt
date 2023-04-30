@@ -17,8 +17,6 @@ st.write("## Identifying information")
 
 st.write("Information to identify the collection")
 
-
-
 st.session_state[KEYS.TITLE] = st.text_input("Collection Name",
                                              help="Enter a descriptive name for the full collection. "
                                                   "This is equivalent to ISAD(G) 3.1.2: Title",

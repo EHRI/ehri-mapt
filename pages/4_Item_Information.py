@@ -4,13 +4,11 @@ from streamlit_extras.switch_page_button import switch_page
 from lib import init_page, value_or_default, PREFIX, load_files
 from microarchive import item_key, KEYS
 
-
 init_page("Descriptive Info")
 
 st.write("## Item information")
 
 st.write("Information about items in this collection.")
-
 
 if PREFIX in st.session_state and st.session_state[PREFIX]:
     items = enumerate(load_files(st.session_state.get(PREFIX)))
@@ -29,10 +27,10 @@ if PREFIX in st.session_state and st.session_state[PREFIX]:
                                                           label_visibility="hidden")
             ead_scope = item_key(ident, KEYS.SCOPE)
             st.session_state[ead_scope] = col2.text_area(f"Scope {i + 1}",
-                                                          value=value_or_default(ead_scope),
-                                                          placeholder="Description",
-                                                          label_visibility="hidden",
-                                                          height=30)
+                                                         value=value_or_default(ead_scope),
+                                                         placeholder="Description",
+                                                         label_visibility="hidden",
+                                                         height=30)
             st.markdown("---")
     else:
         st.write("### No files available")

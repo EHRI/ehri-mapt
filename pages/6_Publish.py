@@ -3,7 +3,7 @@ from streamlit_extras.switch_page_button import switch_page
 
 from ead import Ead
 from iiif import IIIFManifest
-from lib import make_archive, init_page, SITE_ID, PREFIX, WEB, IIIF_SETTINGS, STORE, MODE, FORMAT
+from lib import make_archive, init_page, SITE_ID, PREFIX, IIIF_SETTINGS, MODE, FORMAT, web_builder, storage
 from website import make_html
 
 init_page("Publish")
@@ -16,27 +16,30 @@ desc = make_archive()
 
 def preparing_site(ident: str):
     import polling2
+    def check(data):
+        print(data)
+        return data.status == 'Deployed'
+
     polling2.poll(
-        lambda: WEB.get_site(ident),
-        check_success=lambda data: data.status == 'Deployed',
+        lambda: web_builder().get_site(ident),
+        check_success=check,
         step=5,
-        timeout=10*60
+        timeout=10 * 60
     )
 
-update_id = st.session_state.get(SITE_ID) or None
 
+update_id = st.session_state.get(SITE_ID, None)
 if update_id:
     st.info(f"Update site with code: {update_id}")
 else:
     st.info("""Publishing this data will create a website containing the metadata for this
                collection and a browser for any images.""")
 
-
 if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     prefix = st.session_state.get(PREFIX)
     name = desc.slug()
 
-    site_data = WEB.get_or_create_site(name, update_id)
+    site_data = web_builder().get_or_create_site(name, update_id)
     st.session_state[SITE_ID] = site_data.id
     st.session_state[MODE] = "edit"
     domain = site_data.domain
@@ -63,11 +66,11 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
         PREFIX: st.session_state.get(PREFIX),
         FORMAT: st.session_state.get(FORMAT)
     }
-    STORE.upload(name, site_data.origin_id, html, xml, manifest, state)
+    storage().upload(name, site_data.origin_id, html, xml, manifest, state)
 
     with st.spinner("Preparing site..."):
         if not update_id:
-            st.info("Typically a new site will take **1-5 minutes** to become live...")
+            st.info(f"Typically a new site will take **1-5 minutes** to become [live]({url})...")
         preparing_site(site_data.id)
 
     st.markdown("### Done!")
@@ -79,11 +82,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     else:
         st.markdown(f"Your site is available at: [{url}]({url})")
 
-
-
 st.markdown("---")
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Additional Information")
-
-

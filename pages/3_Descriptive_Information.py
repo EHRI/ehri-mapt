@@ -21,7 +21,7 @@ st.session_state[KEYS.BIOG_HIST] = st.text_area("Biographical information",
 st.session_state[KEYS.SCOPE] = st.text_area("Content information",
                                             help="Provide a general textual description of the contents of this "
                                                  "collection, such as the subject matter to which it pertains."
-                                            "This is equivalent to ISAD(G) 3.3.1: Scope and Content",
+                                                 "This is equivalent to ISAD(G) 3.3.1: Scope and Content",
                                             value=value_or_default(KEYS.SCOPE))
 
 st.session_state[KEYS.LANGS] = st.multiselect("Languages Used",

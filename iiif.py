@@ -72,7 +72,7 @@ class IIIFManifest:
                     "en": ["Attribution"],
                 },
                 "value": {
-                    "en": ["EHRI"]
+                    "en": [data.contact.holder or "EHRI"]
                 }
             },
             items=manifest_items,
