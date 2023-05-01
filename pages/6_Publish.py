@@ -1,4 +1,6 @@
+import requests
 import streamlit as st
+from polling2 import TimeoutException
 from streamlit_extras.switch_page_button import switch_page
 
 from ead import Ead
@@ -14,18 +16,24 @@ st.write("## Publish Data")
 desc = make_archive()
 
 
-def preparing_site(ident: str):
+def preparing_site(url: str):
     import polling2
-    def check(data):
-        print(data)
-        return data.status == 'Deployed'
 
-    polling2.poll(
-        lambda: web_builder().get_site(ident),
-        check_success=check,
-        step=5,
-        timeout=10 * 60
-    )
+    def step():
+        try:
+            r = requests.get(url)
+            return r.status_code == 200
+        except requests.ConnectionError:
+            return False
+
+    try:
+        polling2.poll(
+            step,
+            step=5,
+            timeout=10 * 60
+        )
+    except TimeoutException:
+        pass
 
 
 update_id = st.session_state.get(SITE_ID, None)
@@ -71,7 +79,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     with st.spinner("Preparing site..."):
         if not update_id:
             st.info(f"Typically a new site will take **1-5 minutes** to become [live]({url})...")
-        preparing_site(site_data.id)
+        preparing_site(url)
 
     st.markdown("### Done!")
     st.write(f"""Save this ID for editing this site:""")
