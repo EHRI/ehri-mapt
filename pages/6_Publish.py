@@ -8,15 +8,8 @@ from iiif import IIIFManifest
 from lib import make_archive, init_page, SITE_ID, PREFIX, IIIF_SETTINGS, MODE, FORMAT, web_builder, storage
 from website import make_html
 
-init_page("Publish")
 
-st.write("## Publish Data")
-
-# Build the representation...
-desc = make_archive()
-
-
-def preparing_site(url: str):
+def wait_for_url(url: str):
     import polling2
 
     def step():
@@ -35,6 +28,28 @@ def preparing_site(url: str):
     except TimeoutException:
         pass
 
+
+def preparing_site(ident: str):
+    """Poll Cloudfront distribution deployment. This is typically much
+    slower than waiting for the local edge location to be available."""
+    import polling2
+
+    def check(data):
+        return data.status == 'Deployed'
+
+    polling2.poll(
+        lambda: web_builder().get_site(ident),
+        check_success=check,
+        step=5,
+        timeout=10 * 60
+    )
+
+
+init_page("Publish")
+st.write("## Publish Data")
+
+# Build the representation...
+desc = make_archive()
 
 update_id = st.session_state.get(SITE_ID, None)
 if update_id:
@@ -79,7 +94,8 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     with st.spinner("Preparing site..."):
         if not update_id:
             st.info(f"Typically a new site will take **1-5 minutes** to become [live]({url})...")
-        preparing_site(url)
+        #preparing_site(site_data.id)
+        wait_for_url(url)
 
     st.markdown("### Done!")
     st.write(f"""Save this ID for editing this site:""")

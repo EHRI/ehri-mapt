@@ -99,6 +99,7 @@ class Website:
                 'Enabled': True,
                 'DefaultRootObject': 'index.html',
                 'HttpVersion': 'http2and3',
+                'PriceClass': 'PriceClass_100',
                 'Comment': 'Created by the EHRI-3 WP11 Demo tool',
                 'Origins': {
                     'Quantity': 1,
