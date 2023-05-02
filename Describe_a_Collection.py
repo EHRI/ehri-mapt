@@ -7,7 +7,7 @@ from streamlit_extras.switch_page_button import switch_page
 from lib import init_page, value_or_default, SITE_ID, load_stored_data, PREFIX, load_files, MODE, MODE_CREATE, \
     MODE_EDIT, FORMAT
 
-init_page()
+init_page("WP11 Demo")
 
 st.session_state[MODE] = st.selectbox("What would you like to do?", (MODE_CREATE, MODE_EDIT),
                     format_func=lambda v: "Create New Publication" if v == MODE_CREATE else "Edit Existing Publication",
@@ -33,8 +33,8 @@ if st.session_state[MODE] == MODE_CREATE:
         st.session_state.pop(FORMAT, None)
 else:
     st.markdown("#### Add identifier key:")
-    st.session_state[SITE_ID] = st.text_input("Site ID",
-                                              help="Enter the site ID given when you published this site",
+    st.session_state[SITE_ID] = st.text_input("Enter the site ID given when you published this site:",
+                                              help="This is typically a string beginning with 'E'",
                                               value=value_or_default(SITE_ID, default=''))
     if SITE_ID in st.session_state and st.session_state[SITE_ID]:
         info = load_stored_data(st.session_state[SITE_ID])
@@ -61,6 +61,6 @@ if PREFIX in st.session_state and st.session_state[PREFIX]:
 else:
     st.write("### No dataset selected")
 
-st.markdown('---')
+st.divider()
 if st.button("Next: Enter Basic Identifying Information"):
     switch_page("Identifying Information")

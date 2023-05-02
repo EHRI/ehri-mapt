@@ -9,28 +9,26 @@ from microarchive import KEYS
 
 p = inflect.engine()
 
-init_page("Basic Identifying Info")
+init_page("WP11 Demo | Basic Identifying Info")
 
 items = load_files(st.session_state.get(PREFIX))
 
-st.write("## Identifying information")
+st.write("## Identification")
 
-st.write("Information to identify the collection")
+st.write("**Information to identify the collection.**")
 
-st.session_state[KEYS.TITLE] = st.text_input("Collection Name",
-                                             help="Enter a descriptive name for the full collection. "
-                                                  "This is equivalent to ISAD(G) 3.1.2: Title",
+st.session_state[KEYS.TITLE] = st.text_input("Enter a descriptive name for the full collection:",
+                                             help="This is equivalent to ISAD(G) 3.1.2: Title",
                                              value=value_or_default(KEYS.TITLE))
 
-st.session_state[KEYS.EXTENT] = st.text_area("Type of material",
-                                             help="Enter a general description of the format of this material. "
-                                                  "Example '127 photographs'. "
+st.session_state[KEYS.EXTENT] = st.text_area("Enter a general description of the format of this material:",
+                                             help="Example '127 photographs'. "
                                                   "This is equivalent to ISAD(G) 3.1.5: Extent and Medium",
                                              value=value_or_default(KEYS.EXTENT,
                                                                     f"{len(items)} "
                                                                     f"{p.plural('scanned image', len(items))}" if items else ""))
 
-st.markdown("---")
+st.divider()
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Describe a Collection")

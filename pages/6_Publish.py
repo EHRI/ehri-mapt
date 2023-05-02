@@ -48,6 +48,8 @@ def preparing_site(ident: str):
 init_page("Publish")
 st.write("## Publish Data")
 
+st.write("**Create a website using this description.**")
+
 # Build the representation...
 desc = make_archive()
 
@@ -67,7 +69,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     st.session_state[MODE] = "edit"
     domain = site_data.domain
 
-    st.markdown("---")
+    st.divider()
     url = f"https://{domain}"
 
     st.write("Generating EAD...")
@@ -106,7 +108,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     else:
         st.markdown(f"Your site is available at: [{url}]({url})")
 
-st.markdown("---")
+st.divider()
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Additional Information")

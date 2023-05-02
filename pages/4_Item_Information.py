@@ -4,11 +4,11 @@ from streamlit_extras.switch_page_button import switch_page
 from lib import init_page, value_or_default, PREFIX, load_files
 from microarchive import item_key, KEYS
 
-init_page("Descriptive Info")
+init_page("WP11 Demo | Descriptive Info")
 
-st.write("## Item information")
+st.write("## Items")
 
-st.write("Information about items in this collection.")
+st.write("**Information about items in this collection.**")
 
 if PREFIX in st.session_state and st.session_state[PREFIX]:
     items = enumerate(load_files(st.session_state.get(PREFIX)))
@@ -31,13 +31,13 @@ if PREFIX in st.session_state and st.session_state[PREFIX]:
                                                          placeholder="Description",
                                                          label_visibility="hidden",
                                                          height=30)
-            st.markdown("---")
+            st.divider()
     else:
         st.write("### No files available")
 else:
     st.write("### No dataset selected")
 
-st.markdown("---")
+st.divider()
 col1, col2 = st.columns(2)
 if col1.button("Back"):
     switch_page("Descriptive Information")
