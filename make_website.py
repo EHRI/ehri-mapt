@@ -130,7 +130,7 @@ if __name__ == "__main__":
     print(f"Site will be available at: {url}...", file=sys.stderr)
 
     print("Generating EAD...", file=sys.stderr)
-    xml = Ead().to_xml(desc)
+    xml = Ead().to_xml(desc, os.path.join(url, f"{slug}.xml"))
 
     print("Generating IIIF manifest...", file=sys.stderr)
     manifest = IIIFManifest(

@@ -1,3 +1,5 @@
+import os
+
 import requests
 import streamlit as st
 from polling2 import TimeoutException
@@ -73,7 +75,7 @@ if st.button("Publish Website", disabled=PREFIX not in st.session_state):
     url = f"https://{domain}"
 
     st.write("Generating EAD...")
-    xml = Ead().to_xml(desc)
+    xml = Ead().to_xml(desc, os.path.join(url, f"{name}.xml"))
 
     st.write("Generating IIIF manifest...")
     manifest = IIIFManifest(

@@ -1,6 +1,6 @@
 import re
 from datetime import date
-from typing import List
+from typing import List, Optional
 from xml.etree import ElementTree as ET
 
 import langcodes
@@ -18,7 +18,7 @@ class Ead():
         blanks = r'\r?\n\s*\n'
         return re.split(blanks, text.strip())
 
-    def to_xml(self, data: MicroArchive) -> str:
+    def to_xml(self, data: MicroArchive, url: Optional[str] = None) -> str:
         now = date.today()
         root = ET.Element("ead", {
             'xmlns': 'urn:isbn:1-931666-22-9',
@@ -56,6 +56,12 @@ class Ead():
         unitid.text = data.slug()
         unittitle = ET.SubElement(did, 'unittitle')
         unittitle.text = data.identity.title
+        if url:
+            materialspec = ET.SubElement(did, 'materialspec', {'label': 'Web Source'})
+            ET.SubElement(materialspec, 'extptr', {
+                'xlink:type': 'simple',
+                'xlink:href': url
+            })
         if data.identity.extent:
             physdesc = ET.SubElement(did, 'physdesc', {'label': 'Extent'})
             extent = ET.SubElement(physdesc, 'extent')
