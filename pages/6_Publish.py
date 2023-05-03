@@ -45,7 +45,7 @@ def preparing_site(ident: str):
     )
 
 
-init_page("Publish")
+init_page("WP11 Demo | Publish")
 st.write("## Publish Data")
 
 st.write("**Create a website using this description.**")
