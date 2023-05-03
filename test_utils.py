@@ -13,7 +13,7 @@ def archive():
             extent="1 box"
         ),
         description=Description(
-            scope="Test"
+            scope="Paragraph 1\n\nParagraph 2"
         ),
         contact=Contact(
             street="1 Acacia Av."

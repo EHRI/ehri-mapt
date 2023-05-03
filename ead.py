@@ -1,4 +1,6 @@
+import re
 from datetime import date
+from typing import List
 from xml.etree import ElementTree as ET
 
 import langcodes
@@ -9,6 +11,12 @@ from microarchive import MicroArchive, Item
 class Ead():
     def __init__(self):
         pass
+
+    @staticmethod
+    def paragraphs(text: str) -> List[str]:
+        """Hack to split Markdown into multiple paragraphs"""
+        blanks = r'\r?\n\s*\n'
+        return re.split(blanks, text.strip())
 
     def to_xml(self, data: MicroArchive) -> str:
         now = date.today()
@@ -60,13 +68,15 @@ class Ead():
                 language = ET.SubElement(langmaterial, 'language', {'langcode': langdata.to_alpha3()})
                 language.text = langdata.display_name()
         if data.description.biog:
-            scopecontent = ET.SubElement(archdesc, 'bioghist')
-            scopecontentp = ET.SubElement(scopecontent, 'p')
-            scopecontentp.text = data.description.biog
+            bioghist = ET.SubElement(archdesc, 'bioghist')
+            for ptext in self.paragraphs(data.description.biog):
+                bioghist_p = ET.SubElement(bioghist, 'p')
+                bioghist_p.text = ptext
         if data.description.scope:
             scopecontent = ET.SubElement(archdesc, 'scopecontent')
-            scopecontentp = ET.SubElement(scopecontent, 'p')
-            scopecontentp.text = data.description.scope
+            for ptext in self.paragraphs(data.description.scope):
+                scopecontent_p = ET.SubElement(scopecontent, 'p')
+                scopecontent_p.text = ptext
         if data.control.datedesc or data.control.notes:
             processinfo = ET.SubElement(archdesc, 'processinfo')
             if data.control.notes:
