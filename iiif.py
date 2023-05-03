@@ -53,7 +53,7 @@ class IIIFManifest:
         for item in data.hierarchical_items():
             def make_range(item: Item) -> Union[Range, CanvasRef]:
                 if item.items:
-                    return Range(id=f"{self.baseurl}/{self.name}/range/{item.id}",
+                    return Range(id=f"{self.baseurl}/{self.name}/range/{quote_plus(item.id)}",
                                   label={"en": [item.identity.title]},
                                   items=[make_range(i) for i in item.items])
                 else:
