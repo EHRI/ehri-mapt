@@ -77,11 +77,12 @@ def init_page(title: str = "Describe a Collection"):
     if MODE not in st.session_state:
         st.session_state[MODE] = MODE_CREATE
 
-    with st.sidebar:
-        st.warning("""This tool is a proof of concept for describing and publishing
-        simple websites based on scanned image datasets. The datasets shown here are
-        for demonstration purposes only and need to be set up outside of this tool.""")
+    #with st.sidebar:
+    #    st.warning("""This tool is a proof of concept for describing and publishing
+    #    simple websites based on scanned image datasets. The datasets shown here are
+    #    for demonstration purposes only and need to be set up outside of this tool.""")
 
+    
     st.write("# Micro Archive Publication Tool")
 
 
